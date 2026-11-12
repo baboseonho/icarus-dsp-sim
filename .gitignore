@@ -1,0 +1,19 @@
+# 환경 / environment
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+# ROS 2 빌드 산출물 / colcon outputs
+ros/build/
+ros/install/
+ros/log/
+# 실행 결과 (각자 생성) / per-run outputs
+week0*/out/
+submissions/_mutants/
+*.egg-info/
+# 큰 기록은 docs/final 에만 / keep large recordings only under docs/final
+*.npz
+!docs/final/*.npz
+MUJOCO_LOG.TXT
+setup/install.log
+setup/hw_profile.env

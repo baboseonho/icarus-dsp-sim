@@ -1,0 +1,13 @@
+# 물리 엔진. 2026년 11월 비교 시험으로 골랐다 (docs/engine_bakeoff.md)
+crazyflow==0.4.0
+numpy>=2.0
+scipy
+matplotlib>=3.8
+imageio>=2.34
+imageio-ffmpeg>=0.5
+# 수업 노트북
+jupyterlab
+ipywidgets
+ipykernel
+nbformat
+nbclient

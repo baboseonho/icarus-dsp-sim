@@ -1,0 +1,12 @@
+[project]
+name = "icarus-dsp"
+version = "0.1.0"
+description = "ICARUS Drone Swarm Project simulation course: shared dsp package"
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["dsp*"]
