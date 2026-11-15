@@ -45,6 +45,18 @@ code .
 
 Open today's `weekNN/lesson.ipynb` and pick the `.venv (Python 3.12)` kernel.
 
+## Live view (from week 1)
+
+Every lesson ends with a live-flight cell, `live(...)`. It flies the drone(s) in real time; move the sliders
+(gains, target, wind, repulsion) while it flies and the notebook chart updates at once. ■ stops it, and
+`window=True` also opens the MuJoCo 3D window.
+
+The same values go to **PlotJuggler**: run `plotjuggler("week01")`, then click **Yes → OK** in its window.
+In weeks 4–5 PlotJuggler plots the ROS 2 topics directly, and from a terminal where you typed `dsp` you can use
+`ros2 param set /agent_cf1 k 0.1`, `rqt_reconfigure`, `rqt_graph`, `rviz2 -d ros/dsp_ros/rviz/swarm.rviz`
+(rqt and RViz come with the ROS 2 desktop variant only) and `ros2 bag record`.
+These tools are separate programs and run outside the resource caps below.
+
 ## Resource caps (80 % of the laptop)
 
 `import dsp` applies the caps ([`dsp/limits.py`](dsp/limits.py)):

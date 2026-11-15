@@ -17,7 +17,7 @@ sim_bridge ──/sim/truth──▶ mocap ──/cfN/pose──┬──▶ age
 | `sim_bridge` | 엔진과 드론 6대의 칩(2회차 `Onboard`)을 실시간으로 돌린다. 명령은 진짜 UDP 로 받고, 실제 위치를 `/sim/truth` 로 낸다. `log_path` 를 주면 궤적을 npz 로 저장한다. |
 | `mocap` | `/sim/truth` 에 잡음, 지연, 놓침을 섞어 `/cfN/pose` 로 낸다. 천장 카메라 역할. |
 | `link` | 지상국 쪽 무선. `/cfN/setpoint`, `/cfN/command`, `/swarm/emergency` 를 받아 UDP 패킷으로 보낸다. |
-| `agent_cfN` | 드론 한 대의 분산 제어. 부원이 `weekNN/exercise.py` 에 채운 `Agent` 클래스를 그대로 불러온다 (`DSP_SRC` 로 정답이나 제출본 선택). |
+| `agent_cfN` | 드론 한 대의 분산 제어. 뼈대는 `agent_base.py`의 `AgentBase`이고, 4회차 수업에서는 노트북에서 이어받아 채운 `MyAgent`가 노트북 안에서 돈다. 이 실행 파일은 강사 시연과 최종 비행용으로 기준 구현(그 회차가 끝난 뒤 공개)을 쓴다. |
 | `commander` | 이륙, 대형, 착륙, 비상 정지를 정한다. 4회차는 `W4Machine`, 최종 시나리오는 5회차 `ScenarioMachine`. 끝나면 launch 전체가 내려간다. |
 
 ## 토픽
@@ -42,11 +42,11 @@ ros2 launch dsp_ros swarm.launch.py                          # 4회차: 육각�
 ros2 launch dsp_ros swarm.launch.py week:=5 scenario:=final  # 최종 시나리오
 ```
 
-보통은 `week04/run.py`, `week05/run.py --mode ros` 가 알맞은 인자를 붙여 대신 띄워 준다.
+4회차 노트북은 `agents:=false commander:=false`로 시뮬레이터 쪽 노드만 띄우고, 내 agent 여섯 개와 지휘자는 노트북 안에서 돌린다.
 
 | 인자 | 기본값 | 뜻 |
 |---|---|---|
-| `week` | `4` | agent 를 몇 회차 `exercise.py` 에서 불러올지 |
+| `week` | `4` | agent 기준 구현의 회차: `4` 분산 합의, `5` 합의 + 충돌 회피 |
 | `graph` | `ring` | 통신 그래프: `ring`, `star`, `complete`, `split` |
 | `scenario` | `w4` | `w4` 또는 `final` |
 | `formation` | `hexagon` | `w4` 에서 만들 대형: `line`, `hexagon`, `triangle` |
@@ -62,6 +62,8 @@ ros2 launch dsp_ros swarm.launch.py week:=5 scenario:=final  # 최종 시나리�
 | `downwash` | `true` | 위 드론의 하강 기류가 아래 드론을 누르는 효과 |
 | `bag` | (없음) | 주면 그 이름으로 `ros2 bag record` |
 | `log_path` | (없음) | 주면 sim_bridge 가 궤적을 이 npz 에 저장 |
+| `agents` | `true` | `false`면 agent 노드를 띄우지 않는다 (노트북에서 직접 띄울 때) |
+| `commander` | `true` | `false`면 commander를 띄우지 않는다 |
 
 ## 빌드
 

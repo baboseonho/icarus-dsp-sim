@@ -122,6 +122,15 @@ def setup_plots():
 setup_plots()
 
 
+def log_cm_axis(ax, axis="y"):
+    """로그 눈금을 '1 cm, 10 cm'처럼 cm로 적는다 (한글 글꼴에는 10⁻²의 수학 기호가 없다). 값의 단위는 m."""
+    from matplotlib.ticker import FuncFormatter, NullFormatter
+    fmt = FuncFormatter(lambda v, _: (f"{100 * v:g} cm" if v > 0 else ""))
+    target = ax.yaxis if axis == "y" else ax.xaxis
+    target.set_major_formatter(fmt)
+    target.set_minor_formatter(NullFormatter())
+
+
 # 표 -------------------------------------------------------------------------
 
 def table(rows, header=None):
@@ -253,15 +262,17 @@ def animate(t, P, title="", targets=None, safe=SAFE_DIST, fps=12, speed=1.0, tra
 _ENGINES = {}
 
 
-def get_engine(n=1, mass_scale=1.0, wind=(0.0, 0.0, 0.0), gust=0.0, downwash=False, seed=0):
+def get_engine(n=1, mass_scale=1.0, wind=(0.0, 0.0, 0.0), gust=0.0, downwash=False, seed=0, slot=""):
     """드론 n대짜리 엔진을 돌려준다. 같은 n이면 이미 컴파일한 엔진을 다시 쓰고 조건만 바꾼다.
+    slot="live"는 실시간 비행 전용 엔진이다 (뒤에서 나는 동안 다른 셀이 같은 엔진을 건드리지 않게).
 
     Returns an n-drone engine, reusing an already compiled one when possible.
+    slot="live" gives the real-time flight its own engine.
     """
     from .engine import Engine
-    eng = _ENGINES.get(n)
+    eng = _ENGINES.get((n, slot))
     if eng is None:
-        eng = _ENGINES[n] = Engine(n=n, seed=seed, mass_scale=mass_scale)
+        eng = _ENGINES[(n, slot)] = Engine(n=n, seed=seed, mass_scale=mass_scale)
     eng.set_mass_scale(mass_scale)
     eng.wind = np.asarray(wind, float)
     eng.gust = float(gust)
@@ -283,4 +294,4 @@ def quiet_jax():
 quiet_jax()
 
 __all__ = ["np", "plt", "___", "BlankError", "filled", "table", "top_view", "animate", "min_pair_distance",
-           "COLORS", "SAFE_DIST", "setup_plots", "get_engine"]
+           "COLORS", "SAFE_DIST", "setup_plots", "get_engine", "log_cm_axis"]

@@ -17,7 +17,7 @@ sim_bridge ──/sim/truth──▶ mocap ──/cfN/pose──┬──▶ age
 | `sim_bridge` | Runs the engine and the six drone chips (your week-2 `Onboard`) in real time. Commands arrive over real UDP; true positions go out on `/sim/truth`. Given `log_path`, it saves the trajectories to an npz file. |
 | `mocap` | Adds noise, delay and dropped frames to `/sim/truth` and publishes `/cfN/pose`. Plays the ceiling camera. |
 | `link` | Ground-side radio. Takes `/cfN/setpoint`, `/cfN/command` and `/swarm/emergency` and sends them to the drones as UDP packets. |
-| `agent_cfN` | Distributed control for one drone. It is the `Agent` class you filled in `weekNN/exercise.py`, loaded as is (`DSP_SRC` switches to the solution or a submission). |
+| `agent_cfN` | Distributed control for one drone. The skeleton is `AgentBase` in `agent_base.py`; in week 4 the notebook subclasses it and runs its own `MyAgent` in-process. This executable runs the reference implementation (released after the week) for demos and the final flight. |
 | `commander` | Decides take-off, formations, landing and emergency stop: `W4Machine` in week 4, your week-5 `ScenarioMachine` for the final run. When it exits, the whole launch shuts down. |
 
 ## Topics
@@ -42,11 +42,11 @@ ros2 launch dsp_ros swarm.launch.py                          # week 4: distribut
 ros2 launch dsp_ros swarm.launch.py week:=5 scenario:=final  # final scenario
 ```
 
-Usually `week04/run.py` and `week05/run.py --mode ros` start it for you with the right arguments.
+The week-4 notebook starts only the simulator side with `agents:=false commander:=false` and runs its six agents and the commander in-process.
 
 | Argument | Default | Meaning |
 |---|---|---|
-| `week` | `4` | Which week's `exercise.py` the agents are loaded from |
+| `week` | `4` | Which reference agent: `4` distributed consensus, `5` consensus plus collision avoidance |
 | `graph` | `ring` | Communication graph: `ring`, `star`, `complete`, `split` |
 | `scenario` | `w4` | `w4` or `final` |
 | `formation` | `hexagon` | Formation for `w4`: `line`, `hexagon`, `triangle` |
@@ -62,6 +62,8 @@ Usually `week04/run.py` and `week05/run.py --mode ros` start it for you with the
 | `downwash` | `true` | Downwash from a higher drone pushing down on the one below |
 | `bag` | (none) | If set, `ros2 bag record` under that name |
 | `log_path` | (none) | If set, sim_bridge saves the trajectories to this npz file |
+| `agents` | `true` | `false` skips the agent nodes (when the notebook runs its own) |
+| `commander` | `true` | `false` skips the commander |
 
 ## Building
 

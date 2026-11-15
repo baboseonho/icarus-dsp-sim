@@ -103,6 +103,14 @@ else
   if [ "$DSP_ROS_VARIANT" = "desktop" ]; then ROS_PKG=ros-jazzy-desktop; else ROS_PKG=ros-jazzy-ros-base; fi
   $SUDO nice -n 10 apt-get install -y "$ROS_PKG" ros-dev-tools
 fi
+# PlotJuggler: 비행 중 값을 실시간 그래프로 본다 (1~5회차). ROS 2 저장소에 있어서 ROS 다음에 깐다.
+# 이미 ROS가 깔린 노트북도 설치를 다시 돌리면 이것만 더 깐다.
+if [ -f /opt/ros/jazzy/setup.bash ] && [ ! -x /opt/ros/jazzy/lib/plotjuggler/plotjuggler ] \
+   && [ "${SKIP_ROS:-0}" != "1" ] && [ "$NO_SUDO" != "1" ]; then
+  echo "PlotJuggler 설치 (약 0.1~0.4 GB)"
+  $SUDO nice -n 10 apt-get install -y --no-install-recommends ros-jazzy-plotjuggler-ros \
+    || echo "PlotJuggler 설치 실패. 노트북 안의 실시간 그래프만으로도 수업은 된다"
+fi
 
 say "5/8 uv와 Python 가상환경 (.venv, Python 3.12), 물리 엔진, Jupyter"
 export PATH="$HOME/.local/bin:$PATH"

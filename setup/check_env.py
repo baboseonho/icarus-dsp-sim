@@ -7,6 +7,7 @@ Week-0 environment check. If every line says OK, you are ready.
 """
 import os
 import platform
+import shutil
 import subprocess
 import sys
 import time
@@ -95,6 +96,14 @@ else:
              else (p.stderr.strip().splitlines() or ["?"])[-1][:70], warn=not ok)
     except Exception as e:
         item("3D window (MuJoCo viewer)", False, repr(e)[:70], warn=True)
+
+# 실시간 그래프 도구 (없어도 수업은 된다: 노트북 안 그래프로 대신)
+pj = "/opt/ros/jazzy/lib/plotjuggler/plotjuggler"
+item("PlotJuggler (실시간 그래프)", os.path.exists(pj), pj if os.path.exists(pj)
+     else "없음. sudo apt install --no-install-recommends ros-jazzy-plotjuggler-ros", warn=True)
+rqt = shutil.which("rqt") or os.path.exists("/opt/ros/jazzy/bin/rqt")
+item("rqt, RViz (4~5회차 도구)", bool(rqt), "ROS 2 desktop판" if rqt else "base판이라 없음. PlotJuggler와 ros2 명령으로 대신",
+     warn=True)
 
 # 5. 6대를 육각형으로 띄우는 데모. 실시간보다 빨라야(RTF > 1) 수업을 따라갈 수 있다
 try:

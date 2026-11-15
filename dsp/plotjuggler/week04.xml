@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<root>
+ <tabbed_widget name="Main Window" parent="main_window">
+  <Tab tab_name="군집" containers="1">
+   <Container>
+    <DockSplitter orientation="-" sizes="0.333333;0.333333;0.333333" count="3">
+     <DockArea name="대형 오차 [m]">
+      <plot mode="TimeSeries" flip_x="false" flip_y="false" style="Lines">
+       <range left="0" right="1" top="1" bottom="0"/>
+       <limitY/>
+       <curve name="/swarm/form_err/data" color="#2a6fdb"/>
+      </plot>
+     </DockArea>
+     <DockArea name="가장 가까운 두 대 [m]">
+      <plot mode="TimeSeries" flip_x="false" flip_y="false" style="Lines">
+       <range left="0" right="1" top="1" bottom="0"/>
+       <limitY/>
+       <curve name="/swarm/dmin/data" color="#2a6fdb"/>
+      </plot>
+     </DockArea>
+     <DockArea name="여섯 대의 높이 [m]">
+      <plot mode="TimeSeries" flip_x="false" flip_y="false" style="Lines">
+       <range left="0" right="1" top="1" bottom="0"/>
+       <limitY/>
+       <curve name="/cf1/pose/pose/position/z" color="#2a6fdb"/>
+       <curve name="/cf2/pose/pose/position/z" color="#e8590c"/>
+       <curve name="/cf3/pose/pose/position/z" color="#2f9e44"/>
+       <curve name="/cf4/pose/pose/position/z" color="#ae3ec9"/>
+       <curve name="/cf5/pose/pose/position/z" color="#f59f00"/>
+       <curve name="/cf6/pose/pose/position/z" color="#1098ad"/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab tab_name="cf1" containers="1">
+   <Container>
+    <DockSplitter orientation="-" sizes="0.500000;0.500000" count="2">
+     <DockArea name="cf1 x: 위치와 setpoint [m]">
+      <plot mode="TimeSeries" flip_x="false" flip_y="false" style="Lines">
+       <range left="0" right="1" top="1" bottom="0"/>
+       <limitY/>
+       <curve name="/cf1/pose/pose/position/x" color="#2a6fdb"/>
+       <curve name="/cf1/setpoint/pose/position/x" color="#e8590c"/>
+      </plot>
+     </DockArea>
+     <DockArea name="cf1 y: 위치와 setpoint [m]">
+      <plot mode="TimeSeries" flip_x="false" flip_y="false" style="Lines">
+       <range left="0" right="1" top="1" bottom="0"/>
+       <limitY/>
+       <curve name="/cf1/pose/pose/position/y" color="#2a6fdb"/>
+       <curve name="/cf1/setpoint/pose/position/y" color="#e8590c"/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <currentTabIndex index="0"/>
+ </tabbed_widget>
+ <use_relative_time_offset enabled="0"/>
+ <Plugins>
+  <plugin ID="ROS2 Topic Subscriber">
+   <use_header_stamp value="false"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="100"/>
+   <boolean_strings_to_number value="true"/>
+   <remove_suffix_from_strings value="true"/>
+   <selected_topics value="/swarm/form_err;/swarm/dmin;/cf1/pose;/cf2/pose;/cf3/pose;/cf4/pose;/cf5/pose;/cf6/pose;/cf1/setpoint;/cf2/setpoint;/cf3/setpoint;/cf4/setpoint;/cf5/setpoint;/cf6/setpoint"/>
+  </plugin>
+ </Plugins>
+ <previouslyLoaded_Datafiles/>
+ <previouslyLoaded_Streamer name="ROS2 Topic Subscriber"/>
+ <customMathEquations/>
+ <snippets/>
+</root>

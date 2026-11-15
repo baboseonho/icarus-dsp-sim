@@ -193,3 +193,32 @@ class Chip:
             self._next_att += self.att_dt
             self.tau = np.asarray(self.ctrl.attitude_update(st, self.att_d, self.att_dt), float)
         return np.array([float(self.thrust), *self.tau])
+
+
+class AttitudeController:
+    """자세 제어기. 1회차에 내가 쓴 PID로 만든다.
+
+    각도 오차 → P → 목표 각속도 → 각속도 PID → 각가속도 α → 토크 = J·α
+
+    Attitude controller built from your week-1 PID:
+    angle error → P → rate setpoint → rate PID → angular acceleration α → torque = J·α
+    """
+
+    def __init__(self, inertia, k_angle=(10.0, 10.0, 5.0), rate_kp=(60.0, 60.0, 30.0),
+                 rate_ki=(30.0, 30.0, 10.0), rate_kd=(0.4, 0.4, 0.0), rate_ilim=(0.3, 0.3, 0.3),
+                 max_rate=(6.0, 6.0, 3.0)):
+        from .ref.w1 import PID          # 1회차 PID. 2회차부터 쓰므로 여기서 불러온다
+        self.J = np.asarray(inertia, float)
+        self.k_angle = np.asarray(k_angle)
+        self.max_rate = np.asarray(max_rate)
+        self.rate_pid = PID(np.asarray(rate_kp), np.asarray(rate_ki), np.asarray(rate_kd), np.asarray(rate_ilim))
+
+    def reset(self):
+        self.rate_pid.reset()
+
+    def update(self, st, att_d, dt):
+        e = np.asarray(att_d, float) - st["rpy"]
+        e[2] = (e[2] + np.pi) % (2 * np.pi) - np.pi          # yaw 오차를 [-π, π) 로 감는다
+        w_d = np.clip(self.k_angle * e, -self.max_rate, self.max_rate)
+        alpha = self.rate_pid.update(w_d - st["w"], dt)
+        return self.J * alpha

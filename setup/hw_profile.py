@@ -21,7 +21,7 @@ GB = 1024 ** 3
 
 # 설치에 드는 디스크 (2026-11 깨끗한 24.04에서 잰 값에 여유를 둠)
 NEED_DESKTOP_GB = 9.0     # ROS 2 desktop(rviz, rqt 포함) + 기본 도구 약 4 GB, .venv 1.6 GB, 내려받기 임시 파일
-NEED_BASE_GB = 6.0        # ROS 2 base(화면 도구 없음)
+NEED_BASE_GB = 6.5        # ROS 2 base(화면 도구 없음) + PlotJuggler와 Qt 약 0.4 GB
 MIN_RAM_GB = 4.0
 
 
@@ -96,7 +96,7 @@ def analyze():
         notes.append("ROS 2는 base판으로 깐다 (rviz2/rqt 없음, 수업 진행에는 지장 없음)")
     else:
         ros = "base"
-        problems.append(f"디스크 여유가 {free_for_install / GB:.1f} GB라서 부족하다. 최소 {NEED_BASE_GB:.0f} GB 비워야 한다")
+        problems.append(f"디스크 여유가 {free_for_install / GB:.1f} GB라서 부족하다. 최소 {NEED_BASE_GB:.1f} GB 비워야 한다")
     if ram < MIN_RAM_GB * GB:
         problems.append(f"메모리가 {ram / GB:.1f} GB라서 부족하다 (최소 {MIN_RAM_GB:.0f} GB)")
 

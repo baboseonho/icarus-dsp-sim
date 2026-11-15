@@ -67,7 +67,7 @@ git을 쓰기 어려우면 GitHub 페이지의 `Code → Download ZIP`으로 받
 | 7 VS Code | Python, Jupyter 확장 포함. 이미 있으면 건너뛴다 (`--no-vscode`로 끌 수 있다). 별칭 `dsp` |
 | 8 확인 | 그래프 글꼴 준비, 엔진 1대·6대와 ROS 2 시험 |
 
-설치 전에 사양만 먼저 보고 싶으면 `python3 setup/hw_profile.py`. 디스크는 최소 6 GB, 넉넉하게는 9 GB 이상 비워 둔다.
+설치 전에 사양만 먼저 보고 싶으면 `python3 setup/hw_profile.py`. 디스크는 최소 6.5 GB, 넉넉하게는 9 GB 이상 비워 둔다.
 
 ## 2. 설치 확인
 
@@ -95,6 +95,24 @@ VS Code에서 오늘 회차의 `lesson.ipynb`(예: `week01/lesson.ipynb`)를 연
 `git pull`에서 충돌이 나면, 지난 회차에 채운 노트북을 다른 이름으로 저장해 두고 다시 받는다.
 
 `code .`를 꼭 `dsp`를 친 터미널에서 실행한다. 그래야 ROS 2 환경까지 VS Code가 물려받는다.
+
+## 실시간으로 보기 (1회차부터)
+
+회차마다 노트북 끝에 **실시간 비행** 셀(`live(...)`)이 있다. 드론을 1배속으로 계속 띄우고, 날고 있는 동안
+슬라이더로 게인, 목표, 바람, 척력 값을 바꾸면 노트북 그래프가 바로 달라진다. ■ 멈춤으로 끝낸다. `window=True`를 넣으면 MuJoCo 3D 창도 뜬다.
+
+같은 값을 **PlotJuggler**로도 볼 수 있다. 실제 드론 팀이 비행 기록을 볼 때 쓰는 그래프 도구다.
+
+| 도구 | 여는 법 | 쓰는 회차 |
+|---|---|---|
+| 노트북 실시간 그래프와 슬라이더 | `live(...)` 셀 | 1~5 |
+| PlotJuggler | `plotjuggler("week01")` 셀 → 창에서 **Yes → OK** | 1~5 (4~5회차는 ROS 2 토픽을 바로 그린다) |
+| MuJoCo 3D 창 | `live(..., window=True)` | 1~5 |
+| `ros2 topic echo/hz`, `ros2 param set` | `dsp`를 친 터미널 | 4~5 |
+| rqt_reconfigure, rqt_graph, RViz2 | `dsp`를 친 터미널 (ROS 2 desktop판만) | 4~5 |
+| `ros2 bag record` → PlotJuggler로 다시 보기 | `dsp`를 친 터미널 | 4~5 |
+
+PlotJuggler, rqt, RViz는 노트북과 따로 도는 프로그램이라 아래 자원 상한 밖에서 돈다. 노트북이 버거우면 창을 하나씩만 연다.
 
 ## 자원 상한 (노트북의 80%)
 

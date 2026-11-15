@@ -19,7 +19,7 @@ import rclpy
 from geometry_msgs.msg import PoseStamped
 from rclpy.node import Node
 from rclpy.utilities import remove_ros_args
-from std_msgs.msg import Empty, String
+from std_msgs.msg import Empty, Float64, String
 
 from dsp.grading import formation_error, min_pair_distance
 from dsp.ref import w3 as W3
@@ -75,6 +75,9 @@ class Commander(Node):
         self.form_pub = self.create_publisher(String, "/swarm/formation", LATCHED_QOS)
         self.status_pub = self.create_publisher(String, "/swarm/status", LATCHED_QOS)
         self.emg_pub = self.create_publisher(Empty, "/swarm/emergency", CMD_QOS)
+        # PlotJuggler, rqt_plot에서 바로 그릴 수 있게 숫자 하나짜리 토픽도 낸다
+        self.err_pub = self.create_publisher(Float64, "/swarm/form_err", 10)
+        self.dmin_pub = self.create_publisher(Float64, "/swarm/dmin", 10)
         self.t0 = None
         self.done = False
         self.form_pub.publish(String(data=jdump(name="idle")))
@@ -102,6 +105,9 @@ class Commander(Node):
             self.execute(act)
         self.status_pub.publish(String(data=jdump(state=self.m.state, formation=getattr(self.m, "current_formation", None),
                                                   t=round(t, 2), form_err=o["form_err"], dmin=o["dmin"])))
+        if o["ready"]:
+            self.err_pub.publish(Float64(data=o["form_err"]))
+            self.dmin_pub.publish(Float64(data=o["dmin"]))
 
     def execute(self, act):
         """행동 튜플 하나를 토픽으로 내보낸다.

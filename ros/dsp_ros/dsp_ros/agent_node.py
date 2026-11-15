@@ -11,7 +11,7 @@ import argparse
 import rclpy
 from rclpy.utilities import remove_ros_args
 
-from dsp_ros.agents import Agent, SwarmAgent
+from dsp_ros.agents import agent_class
 from dsp_ros.common import spin
 
 
@@ -26,7 +26,7 @@ def main():
     kw = {"graph": args.graph}
     if args.k is not None:      # 안 주면 Agent 의 기본 게인
         kw["k"] = args.k
-    node = (SwarmAgent if args.week >= 5 else Agent)(args.name, **kw)
+    node = agent_class(args.week)(args.name, **kw)
     try:
         spin(node)
     except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):

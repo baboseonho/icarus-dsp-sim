@@ -2,6 +2,7 @@
 
     ros2 launch dsp_ros swarm.launch.py                          # 4회차: 육각형 분산 합의
     ros2 launch dsp_ros swarm.launch.py week:=5 scenario:=final  # 최종: 이륙 후 일렬, 육각형, 삼각형, 착륙
+    ros2 launch dsp_ros swarm.launch.py agents:=false commander:=false   # 시뮬레이터 쪽만 (노트북이 agent를 띄울 때)
 
 인자와 기본값은 아래 ARGS 에 있다. commander 가 끝나면 launch 전체가 내려간다.
 
@@ -19,7 +20,7 @@ NAMES = [f"cf{i}" for i in range(1, 7)]
 ARGS = {
     "week": "4", "graph": "ring", "scenario": "w4", "formation": "hexagon", "hold": "30.0", "seed": "0",
     "init": "grid", "loss": "0.02", "noise": "0.005", "delay": "0.020", "drop": "0.01", "link_delay": "0.010",
-    "downwash": "true", "bag": "", "log_path": "", "center": "",
+    "downwash": "true", "bag": "", "log_path": "", "center": "", "agents": "true", "commander": "true",
 }
 
 
@@ -36,15 +37,17 @@ def nodes(context):
         Node(package="dsp_ros", executable="link", name="link", output="screen",
              parameters=[{"seed": seed, "loss": float(v["loss"])}]),
     ]
-    for nm in NAMES:
-        out.append(Node(package="dsp_ros", executable="agent", name=f"agent_{nm}", output="screen",
-                        arguments=[nm, "--week", v["week"], "--graph", v["graph"]]))
-    cargs = ["--scenario", v["scenario"], "--formation", v["formation"], "--hold", v["hold"]]
-    if v["center"]:
-        cargs += ["--center"] + v["center"].split(",")
-    commander = Node(package="dsp_ros", executable="commander", name="commander", output="screen", arguments=cargs)
-    out.append(commander)
-    out.append(RegisterEventHandler(OnProcessExit(target_action=commander, on_exit=[Shutdown(reason="commander done")])))
+    if v["agents"].lower() == "true":
+        for nm in NAMES:
+            out.append(Node(package="dsp_ros", executable="agent", name=f"agent_{nm}", output="screen",
+                            arguments=[nm, "--week", v["week"], "--graph", v["graph"]]))
+    if v["commander"].lower() == "true":
+        cargs = ["--scenario", v["scenario"], "--formation", v["formation"], "--hold", v["hold"]]
+        if v["center"]:
+            cargs += ["--center"] + v["center"].split(",")
+        commander = Node(package="dsp_ros", executable="commander", name="commander", output="screen", arguments=cargs)
+        out.append(commander)
+        out.append(RegisterEventHandler(OnProcessExit(target_action=commander, on_exit=[Shutdown(reason="commander done")])))
     if v["bag"]:
         topics = [f"/{nm}/{t}" for nm in NAMES for t in ("pose", "setpoint")] + \
                  ["/swarm/formation", "/swarm/status", "/swarm/emergency", "/sim/truth"]

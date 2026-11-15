@@ -75,6 +75,10 @@
   막혔다고 하면 무엇을 계산하는 칸인지, 어떤 변수를 쓰면 되는지 힌트부터 준다.
 - 이 저장소에는 정답 파일이 없다. 막히면 그래프를 보고 원인을 같이 생각하게 돕는다.
 - 그래프가 이상하면 노트북의 숫자(게인 등)를 바꿔서 다시 실행해 보라고 권한다. 수업은 "바꿔 보고 바로 보는" 방식이다.
+- 실시간 도구: 회차마다 `live(...)` 셀(슬라이더로 비행 중에 값 바꾸기)과 `plotjuggler("weekNN")` 셀이 있다.
+  PlotJuggler 창이 뜨면 Yes → OK를 누르면 된다. 그래프가 비어 있으면 실시간 비행 셀을 다시 실행하라고 안내한다.
+  4~5회차에는 `dsp`를 친 터미널에서 `ros2 param set /agent_cf1 k 0.1`, `ros2 run rqt_reconfigure rqt_reconfigure`로 비행 중에 값을 바꿀 수 있다.
+  PlotJuggler가 없다고 나오면 `sudo apt install --no-install-recommends ros-jazzy-plotjuggler-ros`를 부원이 직접 실행하게 한다 (없어도 노트북 그래프로 수업은 된다).
 
 ## 저장소 구조
 
