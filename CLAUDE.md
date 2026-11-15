@@ -1,6 +1,6 @@
 # ICARUS DSP 수업 저장소 (Claude용 안내)
 
-이 저장소는 ICARUS 동아리의 드론 군집 수업 자료다. 부원은 Ubuntu 24.04 노트북의 VS Code에서
+이 저장소는 ICARUS 동아리의 드론 군집 수업 자료다. 부원은 Ubuntu 24.04 또는 26.04 노트북의 VS Code에서
 `weekNN/lesson.ipynb`를 열고, 수업을 들으면서 빈칸(`___`)을 채우거나 숫자를 바꿔 실행해 그래프를 본다.
 부원 대부분은 리눅스와 제어 이론이 처음이다. 설명은 짧고 쉬운 한국어로, 명령은 복사해서 바로 붙여 넣을 수 있게 준다.
 
@@ -12,8 +12,13 @@
 1. **현재 상태와 노트북 사양 확인**
    - `python3 setup/hw_profile.py`로 사양(CPU, 메모리, 디스크, GPU)과 판단 결과를 보고 부원에게 짧게 알려 준다.
      `문제:` 줄이 있으면(디스크·메모리 부족) 설치 전에 해결 방법을 같이 찾는다.
-   - `cat /etc/os-release`로 Ubuntu 24.04인지 본다. 다른 버전이면 설치하지 말고 부원에게 알린다 (`setup/docker/`가 대안이지만 강사와 먼저 상의).
-   - 이미 설치된 것이 있는지 본다: `/opt/ros/jazzy/setup.bash`, `.venv/bin/python`, `ros/install/`, `setup/install.log`.
+   - `cat /etc/os-release`로 Ubuntu 24.04 또는 26.04인지 본다. 둘 다 아니면 설치하지 말고 부원에게 알린다 (`setup/docker/`가 대안이지만 강사와 먼저 상의).
+     - 24.04: ROS 2 Jazzy, `.venv`는 시스템 Python 3.12. 수업 기준 환경이다.
+     - 26.04: ROS 2 Lyrical, `.venv`의 Python 3.12는 uv가 따로 받는다 (시스템 Python 3.14는 건드리지 않는다).
+       ROS 2 설치가 실패해도 install.sh는 경고만 하고 계속한다. 1~3회차는 그대로 되고, 4~5회차(ROS 2)는
+       커널(3.12)이 Lyrical의 rclpy(3.14용)를 못 불러오므로 `setup/docker/`(24.04 + Jazzy)로 한다고 알려 준다.
+       `check_env.py`의 ROS 2 항목이 26.04에서 `WARN`인 것은 정상이다.
+   - 이미 설치된 것이 있는지 본다: `/opt/ros/jazzy/setup.bash`(24.04) 또는 `/opt/ros/lyrical/setup.bash`(26.04), `.venv/bin/python`, `ros/install/`, `setup/install.log`.
    - `setup/install.log`가 있으면 끝부분부터 읽는다. `##### 설치 완료`가 마지막이면 4번으로 간다.
 
 2. **설치 실행 (sudo 비밀번호가 필요하다)**
@@ -37,7 +42,8 @@
      | `Temporary failure resolving`, curl 실패 | 인터넷 연결 확인 (학교 와이파이 인증 페이지 등) |
      | `colcon 빌드 실패` | `/tmp/dsp_colcon.log` 확인. 보통 ROS 설치가 덜 됐을 때다 |
      | `snap이 없어서 VS Code를 못 깔았습니다` | VS Code가 이미 열려 있다면 무시해도 된다 |
-     | 커널 목록에 `.venv`가 없음 | VS Code 확장 Python, Jupyter 설치 확인 후 창 다시 불러오기 |
+     | 커널 목록에 `ICARUS DSP (py3.12)`가 없음 | VS Code 확장 Python, Jupyter 설치 확인 후 창 다시 불러오기. 그래도 없으면 `bash setup/install.sh --no-sudo` |
+     | 26.04에서 `ROS 2 ... 설치에 실패했습니다` 경고 | 1~3회차는 상관없다. 4~5회차 전에 다시 실행하거나 `setup/docker/` |
 
 4. **설치 확인**
    - Bash 호출마다 셸이 새로 뜨므로 환경을 같은 줄에서 불러온다:
@@ -48,7 +54,7 @@
 
 5. **수업 준비 안내**
    - 수업 당일에는 `dsp` → `git pull`로 그날 회차 폴더를 받고, 그 폴더의 `lesson.ipynb`를 연다.
-     오른쪽 위 커널을 `.venv (Python 3.12)`로 고르고, 첫 셀이 "시뮬레이터 준비 완료"를 내면 된다.
+     오른쪽 위 커널을 `ICARUS DSP (py3.12)`로 고르고, 첫 셀이 "시뮬레이터 준비 완료"를 내면 된다.
    - 회차 폴더가 아직 없으면 정상이다. 미리 받을 방법을 찾지 않는다.
    - 4~5회차(ROS 2)는 터미널에서 `dsp`를 친 뒤 `code .`로 VS Code를 연 창에서 해야 한다고 알려 준다.
      `dsp` 별칭은 새 터미널부터 적용된다.
@@ -78,13 +84,15 @@
 - 실시간 도구: 회차마다 `live(...)` 셀(슬라이더로 비행 중에 값 바꾸기)과 `plotjuggler("weekNN")` 셀이 있다.
   PlotJuggler 창이 뜨면 Yes → OK를 누르면 된다. 그래프가 비어 있으면 실시간 비행 셀을 다시 실행하라고 안내한다.
   4~5회차에는 `dsp`를 친 터미널에서 `ros2 param set /agent_cf1 k 0.1`, `ros2 run rqt_reconfigure rqt_reconfigure`로 비행 중에 값을 바꿀 수 있다.
-  PlotJuggler가 없다고 나오면 `sudo apt install --no-install-recommends ros-jazzy-plotjuggler-ros`를 부원이 직접 실행하게 한다 (없어도 노트북 그래프로 수업은 된다).
+  PlotJuggler가 없다고 나오면 부원이 직접 실행하게 한다 (없어도 노트북 그래프로 수업은 된다):
+  24.04는 `sudo apt install --no-install-recommends ros-jazzy-plotjuggler-ros`,
+  26.04는 `sudo apt install --no-install-recommends ros-lyrical-plotjuggler` (ROS 토픽 플러그인은 아직 Lyrical용이 없다).
 
 ## 저장소 구조
 
 - `setup/` 설치: `install.sh`(전체 설치), `hw_profile.py`(사양 분석, 상한 결정), `env.sh`(환경 불러오기), `check_env.py`(확인), `requirements.txt`, `docker/`
 - `weekNN/` 회차별 수업: `lesson.ipynb`(빈칸 노트북), `background.py`(배경 코드, 노트북이 `from background import *`로 불러옴)
 - `dsp/` 시뮬레이터 라이브러리 (물리 엔진 Crazyflow 래퍼, 그래프 도구 `live.py`, 자원 상한 `limits.py`, 끝난 회차의 기준 구현 `ref/`)
-- `ros/dsp_ros/` ROS 2 Jazzy 패키지 (4~5회차)
+- `ros/dsp_ros/` ROS 2 패키지 (4~5회차, 24.04 Jazzy 기준. 26.04 Lyrical은 env.sh가 `/opt/ros/lyrical`을 불러온다)
 - `docs/` 설계 개요, 물리 엔진 비교
 - 새 회차는 `git pull`로 받는다. 부원이 노트북에 채운 내용과 충돌하면, 채운 노트북을 다른 이름으로 저장해 두고 받게 안내한다.

@@ -76,8 +76,15 @@ class Telemetry:
         self.sock.close()
 
 
+def _ros_distro():
+    """ROS 2 배포판 이름. Ubuntu 24.04는 jazzy, 26.04는 lyrical (setup/env.sh가 ROS_DISTRO를 정한다)."""
+    return os.environ.get("ROS_DISTRO") or os.environ.get("DSP_ROS_DISTRO") or "jazzy"
+
+
 def _pj_binary():
-    for p in (shutil.which("plotjuggler"), "/opt/ros/jazzy/lib/plotjuggler/plotjuggler"):
+    cands = [shutil.which("plotjuggler")]
+    cands += [f"/opt/ros/{d}/lib/plotjuggler/plotjuggler" for d in dict.fromkeys((_ros_distro(), "jazzy", "lyrical"))]
+    for p in cands:
         if p and os.path.exists(p):
             return p
     return None
@@ -119,7 +126,9 @@ def plotjuggler(layout=None):
         return p
     exe = _pj_binary()
     if exe is None:
-        print("PlotJuggler가 설치되어 있지 않아요. 터미널에서: sudo apt install ros-jazzy-plotjuggler-ros\n"
+        d = _ros_distro()
+        pkg = f"ros-{d}-plotjuggler-ros" if d == "jazzy" else f"ros-{d}-plotjuggler"   # Lyrical은 아직 본체만 있다
+        print(f"PlotJuggler가 설치되어 있지 않아요. 터미널에서: sudo apt install {pkg}\n"
               "PlotJuggler 없이도 아래 노트북 그래프는 그대로 실시간으로 그려집니다.")
         return None
     if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
@@ -137,8 +146,9 @@ def plotjuggler(layout=None):
                 streamer = "ROS2 Topic Subscriber"
     _pj_settings(streamer)
     env = os.environ.copy()
-    if "/opt/ros/" in exe and "/opt/ros/jazzy/lib" not in env.get("LD_LIBRARY_PATH", ""):
-        env["LD_LIBRARY_PATH"] = "/opt/ros/jazzy/lib:/opt/ros/jazzy/lib/x86_64-linux-gnu:" + env.get("LD_LIBRARY_PATH", "")
+    ros_root = "/".join(exe.split("/")[:4]) if exe.startswith("/opt/ros/") else None   # 예: /opt/ros/jazzy
+    if ros_root and f"{ros_root}/lib" not in env.get("LD_LIBRARY_PATH", ""):
+        env["LD_LIBRARY_PATH"] = f"{ros_root}/lib:{ros_root}/lib/x86_64-linux-gnu:" + env.get("LD_LIBRARY_PATH", "")
     _PJ["proc"] = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                                    start_new_session=True, env=env)
     print("PlotJuggler를 엽니다. 물음이 뜨면 Yes, 설정 창은 OK를 누르세요. 그다음 아래 실시간 비행을 시작하면 그래프가 움직입니다.")

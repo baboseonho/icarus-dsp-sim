@@ -3,13 +3,13 @@
 [English](README.en.md)
 
 ICARUS 드론 군집(Drone Swarm Project) 수업의 시뮬레이션 환경과 수업 자료다.
-수업은 Ubuntu 24.04 노트북의 VS Code에서 한다. 설명을 들으면서 노트북의 빈칸(`___`)을 같이 채우거나
+수업은 Ubuntu 24.04 또는 26.04 노트북의 VS Code에서 한다. 설명을 들으면서 노트북의 빈칸(`___`)을 같이 채우거나
 숫자를 바꿔 실행하고, 바로 나오는 그래프로 결과를 본다. 다섯 번의 수업이 끝나면 드론 6대가 대형을 바꾸며
 서로 부딪히지 않고 날아다닌다.
 
 | 회차 | 내용 | 상태 |
 |---|---|---|
-| 1 | 한 대를 띄우는 피드백 (PID) | 수업 당일 공개 |
+| 1 | 한 대를 띄우는 피드백 (PID) | 공개 ([`week01/`](week01/README.md)) |
 | 2 | 다단 제어와 웨이포인트 | 수업 당일 공개 |
 | 3 | 대형과 합의 (중앙형) | 수업 당일 공개 |
 | 4 | ROS 2로 옮긴 분산 합의 | 수업 당일 공개 |
@@ -30,7 +30,7 @@ Claude 계정(Pro 이상 구독 또는 API 키)이 필요하다.
 4. Claude 창에 아래를 그대로 붙여 넣는다
 
 ```text
-이 폴더는 ICARUS DSP 드론 수업 자료야. CLAUDE.md와 README.md를 읽고 내 노트북(Ubuntu 24.04)에 수업 환경을 설치해 줘.
+이 폴더는 ICARUS DSP 드론 수업 자료야. CLAUDE.md와 README.md를 읽고 내 노트북(Ubuntu 24.04 또는 26.04)에 수업 환경을 설치해 줘.
 먼저 setup/hw_profile.py로 내 노트북 사양을 보고 어떻게 설치할지 알려 줘.
 비밀번호(sudo)가 필요한 명령은 내가 VS Code 터미널에서 직접 실행할 수 있게 알려 주고, 끝나면 setup/install.log를 읽어서 잘 됐는지 확인해 줘.
 마지막으로 setup/check_env.py로 확인해 줘.
@@ -40,7 +40,15 @@ Claude 계정(Pro 이상 구독 또는 API 키)이 필요하다.
 - Claude가 명령을 실행해도 되냐고 물으면 내용을 읽어 보고 허락한다.
 - 수업 중에도 Claude에게 오류를 물어볼 수 있다. 다만 빈칸(`___`)은 직접 채우는 칸이라서, 따로 부탁하지 않으면 Claude는 정답 대신 힌트를 준다.
 
-## 1. 설치 (우분투 24.04를 막 깔았을 때 한 번)
+## 1. 설치 (우분투 24.04나 26.04를 막 깔았을 때 한 번)
+
+| 우분투 | ROS 2 | Python 3.12 (`.venv`) | 비고 |
+|---|---|---|---|
+| 24.04 | Jazzy | 시스템 Python 3.12 | 수업 기준 환경. 1~5회차 전부 |
+| 26.04 | Lyrical | uv가 따로 받는다 (시스템 Python 3.14는 그대로) | 1~3회차는 그대로 된다. 4~5회차(ROS 2)는 `setup/docker/` 사용 (아래 참고) |
+
+설치 스크립트가 `/etc/os-release`를 보고 알아서 고른다. 26.04에서는 ROS 2 설치가 실패해도 멈추지 않고 경고만 하고
+Python과 1회차 준비를 끝까지 한다.
 
 터미널에서 이 저장소를 홈 폴더에 받고 설치 스크립트를 실행한다:
 
@@ -61,8 +69,8 @@ git을 쓰기 어려우면 GitHub 페이지의 `Code → Download ZIP`으로 받
 | 1 사양 확인 | CPU, 메모리, 디스크, GPU를 보고 설치 방법과 자원 상한을 정한다 (아래 "자원 상한") |
 | 2 자원 상한 | 수업 코드가 노트북의 80%까지만 쓰도록 설정 |
 | 3 기본 도구 | git, curl, 한글 글꼴(나눔), ffmpeg, graphviz, 3D 화면용 라이브러리 |
-| 4 ROS 2 Jazzy | 4~5회차용. 디스크와 메모리가 넉넉하면 desktop판(rviz2, rqt 포함), 아니면 base판 |
-| 5 Python | uv, `.venv`(Python 3.12), 물리 엔진 Crazyflow, numpy, matplotlib, Jupyter |
+| 4 ROS 2 | 4~5회차용. 24.04는 Jazzy, 26.04는 Lyrical. 디스크와 메모리가 넉넉하면 desktop판(rviz2, rqt 포함), 아니면 base판 |
+| 5 Python | uv, `.venv`(Python 3.12), 물리 엔진 Crazyflow, numpy, matplotlib, Jupyter, 커널 `ICARUS DSP (py3.12)` |
 | 6 ROS 2 패키지 | `ros/dsp_ros` 빌드 (colcon) |
 | 7 VS Code | Python, Jupyter 확장 포함. 이미 있으면 건너뛴다 (`--no-vscode`로 끌 수 있다). 별칭 `dsp` |
 | 8 확인 | 그래프 글꼴 준비, 엔진 1대·6대와 ROS 2 시험 |
@@ -88,7 +96,8 @@ git pull       # 오늘 회차 폴더 받기 (예: week01/)
 code .
 ```
 
-VS Code에서 오늘 회차의 `lesson.ipynb`(예: `week01/lesson.ipynb`)를 연다. 오른쪽 위 커널이 `.venv (Python 3.12)`인지 확인한다.
+VS Code에서 오늘 회차의 `lesson.ipynb`(예: `week01/lesson.ipynb`)를 연다. 오른쪽 위 커널이 `ICARUS DSP (py3.12)`인지 확인한다
+(커널을 고르라고 하면 `Jupyter Kernel…` 목록에서 이 이름을 고른다).
 첫 셀을 `Shift+Enter`로 실행해서 "시뮬레이터 준비 완료 · CPU …코어, 메모리 최대 … GB"가 나오면 된다.
 수업 흐름은 그 회차 폴더의 `README.md`에 있다.
 
@@ -106,7 +115,7 @@ VS Code에서 오늘 회차의 `lesson.ipynb`(예: `week01/lesson.ipynb`)를 연
 | 도구 | 여는 법 | 쓰는 회차 |
 |---|---|---|
 | 노트북 실시간 그래프와 슬라이더 | `live(...)` 셀 | 1~5 |
-| PlotJuggler | `plotjuggler("week01")` 셀 → 창에서 **Yes → OK** | 1~5 (4~5회차는 ROS 2 토픽을 바로 그린다) |
+| PlotJuggler | `plotjuggler("week01")` 셀 → 창에서 **Yes → OK** | 1~5 (4~5회차는 ROS 2 토픽을 바로 그린다. 26.04는 아직 ROS 플러그인이 없어 1~3회차만) |
 | MuJoCo 3D 창 | `live(..., window=True)` | 1~5 |
 | `ros2 topic echo/hz`, `ros2 param set` | `dsp`를 친 터미널 | 4~5 |
 | rqt_reconfigure, rqt_graph, RViz2 | `dsp`를 친 터미널 (ROS 2 desktop판만) | 4~5 |
@@ -158,5 +167,7 @@ icarus-dsp-sim/
 - `사양이 부족해서 멈춥니다`: `python3 setup/hw_profile.py`의 `문제:` 줄을 본다. 대개 디스크 공간이다.
 - 셀이 `⚠️ … 실행을 중단합니다`로 멈췄다: 메모리 상한에 걸렸다. 브라우저 탭 등 다른 프로그램을 닫고 커널을 재시작한다.
 - 그래프 글자가 네모로 나온다: `sudo apt install fonts-nanum` 후 VS Code에서 커널 재시작.
-- 커널 목록에 `.venv`가 없다: `dsp` 터미널에서 `code .`로 다시 연다.
-- 우분투 24.04가 아니다: `setup/docker/`로 같은 환경을 컨테이너로 만든다.
+- 커널 목록에 `ICARUS DSP (py3.12)`가 없다: `dsp` 터미널에서 `code .`로 다시 연다. 그래도 없으면 `bash setup/install.sh --no-sudo`.
+- 우분투 24.04나 26.04가 아니다: `setup/docker/`로 같은 환경(24.04 + ROS 2 Jazzy)을 컨테이너로 만든다.
+- 우분투 26.04에서 4~5회차(ROS 2): ROS 2 Lyrical은 Python 3.14용이라 수업 커널(Python 3.12)에서 `rclpy`를 못 불러온다.
+  `setup/docker/`(24.04 + Jazzy) 컨테이너에서 한다. 1~3회차와 PlotJuggler(UDP 그래프)는 26.04에서 그대로 된다.

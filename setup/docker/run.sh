@@ -3,6 +3,7 @@
 # Starts the dev container in the background, capped at 8 CPUs and 5 GB RAM.
 #   setup/docker/run.sh                # 시작
 #   docker exec -it icarus-dsp bash    # 안으로 들어가기
+#   IMAGE=icarus-dsp:lyrical setup/docker/run.sh   # 다른 이미지로 (기본: icarus-dsp:jazzy = Ubuntu 24.04 + Jazzy)
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 NAME="${NAME:-icarus-dsp}"
@@ -20,5 +21,5 @@ docker run -d --name "$NAME" \
   -v icarus-dsp-home:/home/ubuntu \
   -v "$REPO":/ws/icarus-dsp-sim \
   -w /ws/icarus-dsp-sim \
-  icarus-dsp:jazzy sleep infinity
+  "${IMAGE:-icarus-dsp:jazzy}" sleep infinity
 echo "$NAME 컨테이너를 시작했습니다 (cpus=$CPUS mem=$MEM). 들어가기: docker exec -it $NAME bash"

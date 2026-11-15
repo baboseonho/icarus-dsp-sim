@@ -23,6 +23,18 @@ GB = 1024 ** 3
 NEED_DESKTOP_GB = 9.0     # ROS 2 desktop(rviz, rqt 포함) + 기본 도구 약 4 GB, .venv 1.6 GB, 내려받기 임시 파일
 NEED_BASE_GB = 6.5        # ROS 2 base(화면 도구 없음) + PlotJuggler와 Qt 약 0.4 GB
 MIN_RAM_GB = 4.0
+# 지원하는 Ubuntu와 그 위에서 쓰는 ROS 2 배포판 (install.sh, env.sh, check_env.py가 이 결과를 따른다)
+ROS_FOR_UBUNTU = {"24.04": "jazzy", "26.04": "lyrical"}
+
+
+def os_version():
+    """/etc/os-release의 VERSION_ID (예: "24.04"). 없으면 "?"."""
+    p = Path("/etc/os-release")
+    if p.exists():
+        for line in p.read_text().splitlines():
+            if line.startswith("VERSION_ID="):
+                return line.split("=", 1)[1].strip().strip('"')
+    return "?"
 
 
 def meminfo():
@@ -87,6 +99,16 @@ def analyze():
     mem_limit = int(ram * pct / 100)
     notes, problems = [], []
 
+    # OS와 ROS 2 배포판. DSP_ROS_DISTRO=jazzy 처럼 직접 정할 수도 있다
+    ver = os_version()
+    distro = os.environ.get("DSP_ROS_DISTRO", ROS_FOR_UBUNTU.get(ver, ""))
+    if ver not in ROS_FOR_UBUNTU:
+        notes.append(f"Ubuntu {ver}은(는) 수업이 지원하는 버전(24.04, 26.04)이 아니다. "
+                     "ROS 2는 건너뛰고, setup/docker/를 쓰는 편이 안전하다")
+    elif ver == "26.04":
+        notes.append("Ubuntu 26.04: ROS 2는 Lyrical, Python 3.12는 uv가 따로 받는다 (시스템 Python 3.14는 그대로). "
+                     "4~5회차(ROS 2)는 setup/docker/(24.04 + Jazzy)로 한다")
+
     # ROS 2: desktop(rviz2, rqt 포함)이 좋지만 디스크와 메모리가 모자라면 base로
     free_for_install = min(disk, disk_root)
     if free_for_install >= NEED_DESKTOP_GB * GB and ram >= 8 * GB:
@@ -115,12 +137,14 @@ def analyze():
         DSP_CPU_LIST=",".join(map(str, allowed[:cpu_limit])),
         DSP_RAM_MB=ram // 2**20, DSP_MEM_LIMIT_MB=mem_limit // 2**20,
         DSP_ROS_VARIANT=ros, DSP_JOBS=jobs, DSP_CGROUP=int(cg),
+        DSP_OS_VERSION=ver, DSP_ROS_DISTRO=distro,
     ), dict(cpu=cpu_model(), disk=disk, gpu=gpu, has_bat=has_bat, plugged=plugged,
             avail=mem["MemAvailable"], notes=notes, problems=problems)
 
 
 def show(p, x):
     print("== 노트북 사양")
+    print(f"  OS      Ubuntu {p['DSP_OS_VERSION']}")
     print(f"  CPU     {x['cpu']} ({p['DSP_CORES']}코어)")
     print(f"  메모리  {p['DSP_RAM_MB'] / 1024:.1f} GB (지금 여유 {x['avail'] / GB:.1f} GB)")
     print(f"  디스크  여유 {x['disk'] / GB:.1f} GB")
@@ -130,7 +154,8 @@ def show(p, x):
     print(f"  CPU     최대 {p['DSP_CPU_LIMIT']}코어만 쓴다 (나머지는 화면, VS Code 몫)")
     print(f"  메모리  최대 {p['DSP_MEM_LIMIT_MB'] / 1024:.1f} GB. 넘기 전에 실행 중인 셀을 멈춘다")
     print("  GPU     계산에 쓰지 않는다 (물리 엔진은 CPU, 3D 창은 화면 주사율로 제한)")
-    print(f"  ROS 2   {p['DSP_ROS_VARIANT']}판, 설치 동시 작업 {p['DSP_JOBS']}개")
+    ros = f"{p['DSP_ROS_DISTRO']} {p['DSP_ROS_VARIANT']}판" if p["DSP_ROS_DISTRO"] else "건너뜀"
+    print(f"  ROS 2   {ros}, 설치 동시 작업 {p['DSP_JOBS']}개")
     print(f"  상한    {'systemd(cgroup) + ' if p['DSP_CGROUP'] else ''}코어 고정 + 메모리 감시")
     for n in x["notes"]:
         print(f"  참고: {n}")

@@ -48,7 +48,15 @@ print("\nICARUS DSP 환경 확인\n")
 osr = Path("/etc/os-release").read_text() if Path("/etc/os-release").exists() else ""
 ver = next((l.split("=")[1].strip('"') for l in osr.splitlines() if l.startswith("VERSION_ID=")), "?")
 in_docker = Path("/.dockerenv").exists()
-item("Ubuntu 24.04", ver == "24.04", f"VERSION_ID={ver}{' (docker)' if in_docker else ''}")
+# 지원하는 Ubuntu와 ROS 2 배포판 (setup/hw_profile.py와 같은 표)
+ROS_FOR_UBUNTU = {"24.04": "jazzy", "26.04": "lyrical"}
+item("Ubuntu 24.04 / 26.04", ver in ROS_FOR_UBUNTU, f"VERSION_ID={ver}{' (docker)' if in_docker else ''}")
+ROS = os.environ.get("ROS_DISTRO") or os.environ.get("DSP_ROS_DISTRO") or ROS_FOR_UBUNTU.get(ver, "jazzy")
+ROS_ROOT = Path("/opt/ros") / ROS
+# 24.04에서는 ROS 2 항목이 FAIL이면 안 된다. 26.04는 노트북 커널(3.12)이 ROS 2 Lyrical(Python 3.14)의 rclpy를
+# 못 불러오므로 WARN으로만 보이고, 4~5회차는 setup/docker/(24.04 + Jazzy)로 한다
+ROS_WARN = ver != "24.04"
+ROS_HINT = f" · Ubuntu {ver}: 4~5회차는 setup/docker/" if ROS_WARN else ""
 item("Python 3.12", sys.version_info[:2] == (3, 12), platform.python_version())
 import dsp  # noqa: E402,F401  불러오는 순간 자원 상한이 걸린다
 from dsp.limits import STATUS, describe  # noqa: E402
@@ -74,14 +82,16 @@ except Exception as e:
 try:
     import rclpy  # noqa: F401
     p = subprocess.run(["ros2", "topic", "list"], capture_output=True, text=True, timeout=20)
-    item("rclpy import + `ros2 topic list`", p.returncode == 0, p.stdout.strip().replace("\n", " ")[:50])
+    item(f"rclpy import + `ros2 topic list` ({ROS})", p.returncode == 0, p.stdout.strip().replace("\n", " ")[:50],
+         warn=ROS_WARN)
 except Exception as e:
-    item("rclpy import + `ros2 topic list`", False, repr(e)[:80])
+    item(f"rclpy import + `ros2 topic list` ({ROS})", False, repr(e)[:80] + ROS_HINT, warn=ROS_WARN)
 try:
     p = subprocess.run(["ros2", "pkg", "prefix", "dsp_ros"], capture_output=True, text=True, timeout=20)
-    item("ROS 2 package dsp_ros built", p.returncode == 0, p.stdout.strip()[-50:] or "colcon build 필요")
+    item("ROS 2 package dsp_ros built", p.returncode == 0, p.stdout.strip()[-50:] or "colcon build 필요",
+         warn=ROS_WARN)
 except Exception as e:
-    item("ROS 2 package dsp_ros built", False, repr(e)[:80])
+    item("ROS 2 package dsp_ros built", False, repr(e)[:80] + ROS_HINT, warn=ROS_WARN)
 
 # 4. 3D 창
 if "--no-window" in sys.argv:
@@ -98,10 +108,12 @@ else:
         item("3D window (MuJoCo viewer)", False, repr(e)[:70], warn=True)
 
 # 실시간 그래프 도구 (없어도 수업은 된다: 노트북 안 그래프로 대신)
-pj = "/opt/ros/jazzy/lib/plotjuggler/plotjuggler"
+pj = str(ROS_ROOT / "lib" / "plotjuggler" / "plotjuggler")
+# Jazzy는 ROS 2 토픽까지 읽는 plotjuggler-ros, 그 플러그인이 아직 없는 Lyrical은 PlotJuggler 본체
+pj_pkg = f"ros-{ROS}-plotjuggler-ros" if ROS == "jazzy" else f"ros-{ROS}-plotjuggler"
 item("PlotJuggler (실시간 그래프)", os.path.exists(pj), pj if os.path.exists(pj)
-     else "없음. sudo apt install --no-install-recommends ros-jazzy-plotjuggler-ros", warn=True)
-rqt = shutil.which("rqt") or os.path.exists("/opt/ros/jazzy/bin/rqt")
+     else f"없음. sudo apt install --no-install-recommends {pj_pkg}", warn=True)
+rqt = shutil.which("rqt") or (ROS_ROOT / "bin" / "rqt").exists()
 item("rqt, RViz (4~5회차 도구)", bool(rqt), "ROS 2 desktop판" if rqt else "base판이라 없음. PlotJuggler와 ros2 명령으로 대신",
      warn=True)
 
