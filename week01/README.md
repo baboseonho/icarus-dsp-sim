@@ -5,6 +5,33 @@
 드론 한 대를 위아래로만 움직이게 두고, 높이를 보면서 추력을 고치는 PID를 직접 써 본다.
 수업이 끝나면 내 PID가 드론을 0.5 m에서 1.5 m로 올려서 그 자리에 세운다.
 
+## 수업 전에 한 번 확인하기
+
+설치를 미리 끝냈다면, 수업 전에 터미널(`Ctrl+Alt+T`)에서 아래 두 줄을 실행해 본다.
+터미널에는 명령만 친다. `#` 뒤는 설명이라 치지 않는다.
+
+```bash
+dsp              # 저장소 폴더로 이동하고 환경 불러오기
+git remote -v    # 이 폴더가 어디서 받은 것인지 확인
+```
+
+| 나온 결과 | 뜻 | 할 일 |
+|---|---|---|
+| `origin  https://github.com/baboseonho/icarus-dsp-sim.git` | 정상 | 없음. 수업 날 아래 "수업 시작하기"대로 하면 된다 |
+| `fatal: not a git repository` | ZIP으로 받은 폴더라 `git pull`이 안 된다 | 아래 "다시 받기"를 한 번 실행한다 |
+| `dsp: command not found` | 설치가 끝나지 않았거나 예전 터미널이다 | 터미널을 새로 열어 다시 해 본다. 그래도 안 되면 저장소 README의 "1. 설치"부터 한다 |
+
+**다시 받기** (ZIP으로 받았던 사람만, 처음 한 번)
+
+```bash
+mv ~/icarus-dsp-sim ~/icarus-dsp-sim_old
+git clone https://github.com/baboseonho/icarus-dsp-sim.git ~/icarus-dsp-sim
+cd ~/icarus-dsp-sim && bash setup/install.sh --no-sudo
+```
+
+`--no-sudo`는 이미 깔린 시스템 설치(ROS 등)는 건너뛰고 Python 환경과 `dsp` 별칭만 다시 만든다. 몇 분이면 끝난다.
+Ubuntu는 24.04와 26.04 모두 된다.
+
 ## 수업 시작하기
 
 ```bash

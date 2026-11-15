@@ -5,6 +5,33 @@
 One drone moves only up and down. You write the PID that watches the height and corrects the thrust.
 By the end of class your PID climbs the drone from 0.5 m to 1.5 m and holds it there.
 
+## Check once before class
+
+If you already installed everything, run these two lines in a terminal (`Ctrl+Alt+T`) before class.
+Type only the commands; anything after `#` is a comment.
+
+```bash
+dsp              # go to the repo folder and load the environment
+git remote -v    # check where this folder was cloned from
+```
+
+| What you see | Meaning | What to do |
+|---|---|---|
+| `origin  https://github.com/baboseonho/icarus-dsp-sim.git` | All good | Nothing. On class day follow "Starting the class" below |
+| `fatal: not a git repository` | The folder came from a ZIP, so `git pull` won't work | Run "Re-clone" below once |
+| `dsp: command not found` | Setup isn't finished, or this is an old terminal | Open a new terminal and try again; if it still fails, start from "1. Install" in the repo README |
+
+**Re-clone** (only if you downloaded the ZIP; once)
+
+```bash
+mv ~/icarus-dsp-sim ~/icarus-dsp-sim_old
+git clone https://github.com/baboseonho/icarus-dsp-sim.git ~/icarus-dsp-sim
+cd ~/icarus-dsp-sim && bash setup/install.sh --no-sudo
+```
+
+`--no-sudo` skips the system-level installs you already have (ROS etc.) and only rebuilds the Python environment and the `dsp` alias. It takes a few minutes.
+Both Ubuntu 24.04 and 26.04 are supported.
+
 ## Starting the class
 
 ```bash
