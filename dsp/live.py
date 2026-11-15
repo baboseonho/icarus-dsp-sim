@@ -22,6 +22,8 @@ if "ipykernel" in sys.modules:
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib import animation, font_manager  # noqa: E402
 
+from .lang import get_language, set_language, tr  # noqa: E402,F401
+
 COLORS = ["#2a6fdb", "#e8590c", "#2f9e44", "#ae3ec9", "#f59f00", "#1098ad"]
 SAFE_DIST = 0.30
 
@@ -40,7 +42,8 @@ class _Blank:
     """
 
     def _stop(self, *a, **k):
-        raise BlankError("아직 채우지 않은 빈칸(___)이 있어요. 위 셀의 ___ 를 채우고 그 셀부터 다시 실행하세요.")
+        raise BlankError(tr("아직 채우지 않은 빈칸(___)이 있어요. 위 셀의 ___ 를 채우고 그 셀부터 다시 실행하세요.",
+                            "A blank (___) is still empty. Fill in the ___ in the cell above and run again from that cell."))
 
     __add__ = __radd__ = __sub__ = __rsub__ = __mul__ = __rmul__ = _stop
     __truediv__ = __rtruediv__ = __pow__ = __rpow__ = __neg__ = __matmul__ = __rmatmul__ = _stop
@@ -110,7 +113,7 @@ def setup_plots():
     })
     if font:
         plt.rcParams["font.family"] = font
-    else:
+    elif get_language() == "ko":
         print("한글 글꼴이 없어서 그래프 글자가 깨질 수 있어요:  sudo apt install fonts-nanum  후 커널 재시작")
     try:
         import imageio_ffmpeg
@@ -136,7 +139,7 @@ def log_cm_axis(ax, axis="y"):
 def table(rows, header=None):
     """[(항목, 값, 기준, 통과 여부), ...]를 초록/빨강 표로 보여 준다. 통과 여부가 None이면 색을 칠하지 않는다."""
     from IPython.display import HTML, display
-    head = header or ("항목", "결과", "기준", "")
+    head = header or tr(("항목", "결과", "기준", ""), ("item", "result", "limit", ""))
     h = "".join(f"<th style='text-align:left;padding:4px 12px'>{c}</th>" for c in head)
     body = ""
     for name, value, target, ok in rows:
@@ -294,4 +297,4 @@ def quiet_jax():
 quiet_jax()
 
 __all__ = ["np", "plt", "___", "BlankError", "filled", "table", "top_view", "animate", "min_pair_distance",
-           "COLORS", "SAFE_DIST", "setup_plots", "get_engine", "log_cm_axis"]
+           "COLORS", "SAFE_DIST", "setup_plots", "get_engine", "log_cm_axis", "set_language"]

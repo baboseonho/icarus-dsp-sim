@@ -27,6 +27,8 @@ from pathlib import Path
 
 import numpy as np
 
+from .lang import tr
+
 PJ_PORT = 9870
 LAYOUTS = Path(__file__).resolve().parent / "plotjuggler"
 _PJ = {"proc": None}
@@ -122,17 +124,21 @@ def plotjuggler(layout=None):
     """
     p = _PJ["proc"]
     if p is not None and p.poll() is None:
-        print("PlotJuggler가 이미 열려 있어요. 그 창을 쓰면 됩니다 (다른 회차 배치는 창에서 Layout → 불러오기).")
+        print(tr("PlotJuggler가 이미 열려 있어요. 그 창을 쓰면 됩니다 (다른 회차 배치는 창에서 Layout → 불러오기).",
+                 "PlotJuggler is already open. Use that window (another week's layout: Layout menu in that window)."))
         return p
     exe = _pj_binary()
     if exe is None:
         d = _ros_distro()
         pkg = f"ros-{d}-plotjuggler-ros" if d == "jazzy" else f"ros-{d}-plotjuggler"   # Lyrical은 아직 본체만 있다
-        print(f"PlotJuggler가 설치되어 있지 않아요. 터미널에서: sudo apt install {pkg}\n"
-              "PlotJuggler 없이도 아래 노트북 그래프는 그대로 실시간으로 그려집니다.")
+        print(tr(f"PlotJuggler가 설치되어 있지 않아요. 터미널에서: sudo apt install {pkg}\n"
+                 "PlotJuggler 없이도 아래 노트북 그래프는 그대로 실시간으로 그려집니다.",
+                 f"PlotJuggler is not installed. In a terminal: sudo apt install {pkg}\n"
+                 "The notebook plots below still update live without PlotJuggler."))
         return None
     if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
-        print("화면(DISPLAY)이 없는 환경이라 PlotJuggler 창을 띄울 수 없어요.")
+        print(tr("화면(DISPLAY)이 없는 환경이라 PlotJuggler 창을 띄울 수 없어요.",
+                 "There is no display (DISPLAY) here, so the PlotJuggler window can't open."))
         return None
     args = [exe, "-n"]
     streamer = "UDP Server"
@@ -151,7 +157,9 @@ def plotjuggler(layout=None):
         env["LD_LIBRARY_PATH"] = f"{ros_root}/lib:{ros_root}/lib/x86_64-linux-gnu:" + env.get("LD_LIBRARY_PATH", "")
     _PJ["proc"] = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                                    start_new_session=True, env=env)
-    print("PlotJuggler를 엽니다. 물음이 뜨면 Yes, 설정 창은 OK를 누르세요. 그다음 아래 실시간 비행을 시작하면 그래프가 움직입니다.")
+    print(tr("PlotJuggler를 엽니다. 물음이 뜨면 Yes, 설정 창은 OK를 누르세요. 그다음 아래 실시간 비행을 시작하면 그래프가 움직입니다.",
+             "Opening PlotJuggler. Answer Yes to the question and OK in the settings window. "
+             "Then start the live flight and the plots will move."))
     return _PJ["proc"]
 
 
@@ -239,7 +247,7 @@ class LiveSession:
                            style={"description_width": "initial"}, layout=W.Layout(width="260px"))
             d.observe(lambda ch, k=k: self.values.__setitem__(k, ch["new"]), names="value")
             sl.append(d)
-        self.btn = W.Button(description="■ 멈춤", button_style="danger", layout=W.Layout(width="90px"))
+        self.btn = W.Button(description=tr("■ 멈춤", "■ Stop"), button_style="danger", layout=W.Layout(width="90px"))
         self.btn.on_click(lambda _: self.stop())
         self.status = W.HTML(value="")
         self.img = W.Image(format="png")
@@ -321,16 +329,18 @@ class LiveSession:
                 pass
             if done:
                 break
-            self.status.value = f"&nbsp; 비행 중 · t = {self.t_sim:5.1f} s (최대 {self.duration:.0f} s)"
+            self.status.value = tr(f"&nbsp; 비행 중 · t = {self.t_sim:5.1f} s (최대 {self.duration:.0f} s)",
+                                   f"&nbsp; flying · t = {self.t_sim:5.1f} s (max {self.duration:.0f} s)")
             time.sleep(self.chart_dt)
         self.th.join(timeout=5)
         e = self.error
         if e is None:
-            msg = f"&nbsp; 끝 · {self.t_sim:.1f} s 비행"
+            msg = tr(f"&nbsp; 끝 · {self.t_sim:.1f} s 비행", f"&nbsp; done · flew {self.t_sim:.1f} s")
         elif isinstance(e, BlankError) or "BlankError" in type(e).__name__:
-            msg = "&nbsp; ✍️ 아직 채우지 않은 빈칸(___)이 있어요. 위 셀을 채우고 다시 실행하세요."
+            msg = tr("&nbsp; ✍️ 아직 채우지 않은 빈칸(___)이 있어요. 위 셀을 채우고 다시 실행하세요.",
+                     "&nbsp; ✍️ A blank (___) is still empty. Fill in the cell above and run it again.")
         else:
-            msg = f"&nbsp; 오류로 멈춤: {type(e).__name__}: {e}"
+            msg = tr("&nbsp; 오류로 멈춤: ", "&nbsp; stopped by an error: ") + f"{type(e).__name__}: {e}"
         self.status.value = msg
         self.btn.disabled = True
         self.tx.close()

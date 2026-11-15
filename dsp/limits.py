@@ -162,8 +162,10 @@ def apply():
 
 
 def describe():
+    from .lang import tr
     s = STATUS
     if not s:
-        return "자원 상한 꺼짐 (DSP_NO_LIMIT=1)"
-    return (f"CPU {s['cpus']}/{s['cores_total']}코어, 메모리 최대 {s['mem_limit'] / 2**30:.1f}/"
-            f"{s['mem_total'] / 2**30:.1f} GB{' (systemd)' if s['cgroup'] else ''}")
+        return tr("자원 상한 꺼짐 (DSP_NO_LIMIT=1)", "resource limits off (DSP_NO_LIMIT=1)")
+    mem = f"{s['mem_limit'] / 2**30:.1f}/{s['mem_total'] / 2**30:.1f} GB{' (systemd)' if s['cgroup'] else ''}"
+    return tr(f"CPU {s['cpus']}/{s['cores_total']}코어, 메모리 최대 {mem}",
+              f"CPU {s['cpus']}/{s['cores_total']} cores, memory max {mem}")

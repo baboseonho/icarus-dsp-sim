@@ -40,9 +40,9 @@ git pull     # fetch today's folder (week01/)
 code .       # open the repo in VS Code
 ```
 
-In VS Code open `week01/lesson.ipynb`. Check that the kernel in the top right is `ICARUS DSP (py3.12)`.
+Open `week01/lesson_en.ipynb` in VS Code (the English notebook; `lesson.ipynb` is the same notebook in Korean). Check that the kernel in the top right is `ICARUS DSP (py3.12)`.
 If VS Code asks for a kernel, pick `ICARUS DSP (py3.12)` from the `Jupyter Kernel…` list.
-Run the first cell with `Shift+Enter`; when the "simulator ready" line (printed in Korean) appears, you are set.
+Run the first cell with `Shift+Enter`; when the "Simulator ready" line appears, you are set.
 
 ## How the class works
 
@@ -56,7 +56,7 @@ Run the first cell with `Shift+Enter`; when the "simulator ready" line (printed 
 |---|---|---|
 | 0 Setup | nothing | drone data |
 | 1 Hover thrust | the thrust needed to hang still | exact mass / 10% heavier / lighter |
-| 2 P control | the error, the P output | a step response that bounces and sags, `kp` 2·8·20 compared |
+| 2 P control | the error, the P output, the thrust `return` | a step response that bounces and sags, `kp` 2·8·20 compared |
 | 3 D control | the rate, the output | P vs PD, `kd` 2·4·8 compared |
 | 4 I control | the integral, the output | the sag disappears, overshoot appears instead |
 | 5 Integrate only when close | one `if` condition | the overshoot shrinks |
@@ -69,7 +69,8 @@ Mission criteria: overshoot < 10%, 2% settling < 2 s, error over the last second
 
 ```
 week01/
-├─ lesson.ipynb    class notebook (with blanks). The only file you open
+├─ lesson_en.ipynb class notebook in English (with blanks). The only file you open
+├─ lesson.ipynb    the same notebook in Korean
 ├─ background.py   background code: physics engine, levelling, plots. No need to open it
 └─ README.md       Korean version of this file (this one is README.en.md)
 ```
