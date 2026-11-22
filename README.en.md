@@ -10,7 +10,7 @@ formation and fly without hitting each other.
 | Week | Topic | Status |
 |---|---|---|
 | 1 | Feedback for one drone (PID) | open ([`week01/`](week01/README.en.md)) |
-| 2 | Cascaded control and waypoints | opens on the day |
+| 2 | Cascaded control and waypoints | open ([`week02/`](week02/README.md), Korean only for now) |
 | 3 | Formations and consensus (centralised) | opens on the day |
 | 4 | Distributed consensus on ROS 2 | opens on the day |
 | 5 | Collision avoidance and the final challenge | opens on the day |
