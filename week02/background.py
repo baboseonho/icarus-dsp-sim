@@ -1,11 +1,13 @@
 """2회차 배경 코드: 드론 한 대를 기울여서 옆으로 보내는 시험대.
 
-수업 노트북(lesson.ipynb)이 `from background import *`로 불러 쓴다. 열어 볼 필요는 없다.
+수업 노트북(lesson.ipynb, 영어판 lesson_en.ipynb)이 `from background import *`로 불러 쓴다. 열어 볼 필요는 없다.
 노트북에서 쓰는 세 부품(위치 제어기, 가속도→추력·자세, 기울기 제한)을 여기서 칩 하나로 묶고,
-자세 제어기와 바람, 코스, 그래프는 여기서 맡는다.
+자세 제어기와 바람, 코스, 그래프는 여기서 맡는다. 화면 글자는 기본이 한국어이고, 영어 노트북은 첫 셀에서
+set_language("en")을 불러 영어로 바꾼다.
 
 Week-2 background: the notebook writes the position controller, the acceleration-to-attitude
 conversion and the tilt limit; this file wires them into one chip and runs the flights.
+Screen text is Korean by default; the English notebook calls set_language("en") in its first cell.
 """
 from __future__ import annotations
 
@@ -15,6 +17,7 @@ import numpy as np
 
 from dsp.live import *  # noqa: F401,F403
 from dsp.live import get_engine, filled, table, plt, COLORS, animate
+from dsp.lang import tr as _t
 from dsp.realtime import plotjuggler  # noqa: F401  노트북에서 PlotJuggler 창 열기
 from dsp import config as C
 from dsp.grading import step_metrics  # noqa: F401
@@ -42,7 +45,7 @@ def warmup():
     eng.reset(1, init_pos=[[0.0, 0.0, 1.0]])
     for _ in range(20):
         eng.step([[MASS * G, 0.0, 0.0, 0.0]])
-    print(f"시뮬레이터 준비 완료 · {describe()}")
+    print(_t("시뮬레이터 준비 완료", "Simulator ready") + f" · {describe()}")
 
 
 # 칩 조립 -------------------------------------------------------------------------------
@@ -109,7 +112,7 @@ def tilt_test(sideways_acc, angles=(5, 10, 20), T=2.0, t_tilt=0.15):
         th = np.radians(deg)
         got = float(filled(sideways_acc(th)))
         rows.append((f"θ = {deg}°", f"{got:.3f} m/s²", f"g·tanθ = {G * np.tan(th):.3f}", abs(got - G * np.tan(th)) < 1e-6))
-    table(rows, header=("기울기", "내 식", "답", ""))
+    table(rows, header=_t(("기울기", "내 식", "답", ""), ("tilt", "my formula", "answer", "")))
 
     eng = get_engine(1)
     att = AttitudeController(INERTIA)
@@ -129,11 +132,11 @@ def tilt_test(sideways_acc, angles=(5, 10, 20), T=2.0, t_tilt=0.15):
             ts.append(i / eng.freq); vs.append(st["v"][0])
         ts, vs = np.array(ts), np.array(vs)
         c = COLORS[k % 6]
-        ax.plot(ts, vs, color=c, lw=2.2, label=f"θ = {deg}° 시뮬레이터")
-        ax.plot(ts, a_pred * np.maximum(ts - t_tilt, 0), color=c, lw=1.2, ls="--", label=f"θ = {deg}° 내 식")
+        ax.plot(ts, vs, color=c, lw=2.2, label=f"θ = {deg}° " + _t("시뮬레이터", "simulator"))
+        ax.plot(ts, a_pred * np.maximum(ts - t_tilt, 0), color=c, lw=1.2, ls="--", label=f"θ = {deg}° " + _t("내 식", "my formula"))
     ax.set_ylim(0, None)
-    ax.set_xlabel("t [s]"); ax.set_ylabel("앞으로 가는 속도 vx [m/s]")
-    ax.set_title("앞으로 기울인 채 날리기 (점선: 공기 저항이 없을 때)")
+    ax.set_xlabel("t [s]"); ax.set_ylabel(_t("앞으로 가는 속도 vx [m/s]", "forward speed vx [m/s]"))
+    ax.set_title(_t("앞으로 기울인 채 날리기 (점선: 공기 저항이 없을 때)", "Flying while tilted forward (dashed: without air drag)"))
     ax.legend(fontsize=8, ncol=3); plt.show()
 
 
@@ -153,15 +156,15 @@ def _fmt(v):
 
 def check_acceleration(PositionController):
     """① 위치 제어기를 세 입력으로 시험한다 (ki = 0, 매번 새로 만들어서)."""
-    cases = [("목표가 +x로 1 m, 멈춰 있음", _st(), _sp(p=(1, 0, 0)), (6, 0, 0)),
-             ("제자리인데 +y로 1 m/s 움직임", _st(v=(0, 1, 0)), _sp(), (0, -4, 0)),
-             ("궤적이 위로 0.5 m/s² 를 알려 줌", _st(), _sp(a=(0, 0, 0.5)), (0, 0, 0.5))]
+    cases = [(_t("목표가 +x로 1 m, 멈춰 있음", "target 1 m toward +x, at rest"), _st(), _sp(p=(1, 0, 0)), (6, 0, 0)),
+             (_t("제자리인데 +y로 1 m/s 움직임", "on target but moving 1 m/s toward +y"), _st(v=(0, 1, 0)), _sp(), (0, -4, 0)),
+             (_t("궤적이 위로 0.5 m/s² 를 알려 줌", "trajectory says 0.5 m/s² upward"), _st(), _sp(a=(0, 0, 0.5)), (0, 0, 0.5))]
     rows = []
     for name, st, sp, want in cases:
         pc = PositionController(kp=6.0, kd=4.0, ki=0.0)
         got = np.asarray(filled(pc.acceleration(st, sp, 0.01)), float)
         rows.append((name, _fmt(got), _fmt(want), bool(np.allclose(got, want, atol=1e-6))))
-    table(rows, header=("입력", "내 a [m/s²]", "손으로 푼 답", ""))
+    table(rows, header=_t(("입력", "내 a [m/s²]", "손으로 푼 답", ""), ("input", "my a [m/s²]", "worked by hand", "")))
 
 
 def _force_view(ax, h, v, up_label, h_label, flip, title):
@@ -171,7 +174,7 @@ def _force_view(ax, h, v, up_label, h_label, flip, title):
     ax.axhline(0, color="#ccc", lw=0.8); ax.axvline(0, color="#ccc", lw=0.8)
     kw = dict(head_width=0.5, head_length=0.7, length_includes_head=True)
     ax.arrow(0, 0, 0, -G, color="#868e96", lw=1.5, **kw)
-    ax.annotate("무게 (-g)", (0.3, -G + 0.8), color="#868e96", fontsize=9)
+    ax.annotate(_t("무게 (-g)", "weight (-g)"), (0.3, -G + 0.8), color="#868e96", fontsize=9)
     ax.arrow(0, 0, 0, v, color="#2f9e44", lw=1.5, **kw)
     side = -1.0 if h >= 0 else 1.0                                 # 글자는 f 반대쪽에
     ax.annotate(up_label, (0.4 * side, v * 0.55), color="#2f9e44", fontsize=9,
@@ -205,25 +208,27 @@ def force_picture(acc=(5.0, 3.0, 0.0)):
     pitch = np.arctan2(f[0], f[2])
     roll = np.arctan2(-f[1], np.hypot(f[0], f[2]))
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4.6))
-    _force_view(ax1, f[0], f[2], "버티는 몫 g + a_z", "가속하는 몫 a_x", False,
-                f"옆에서 본 모습 (오른쪽이 앞 +x)\npitch = atan2(f_x, f_z) = {np.degrees(pitch):+.1f}°")
-    _force_view(ax2, f[1], np.hypot(f[0], f[2]), r"$\sqrt{f_x^2 + f_z^2}$", "가속하는 몫 a_y", True,
-                f"뒤에서 본 모습 (왼쪽이 +y)\nroll = atan2($-f_y$, $\\sqrt{{f_x^2+f_z^2}}$) = {np.degrees(roll):+.1f}°")
+    _force_view(ax1, f[0], f[2], _t("버티는 몫 g + a_z", "holding part g + a_z"), _t("가속하는 몫 a_x", "accelerating part a_x"), False,
+                _t("옆에서 본 모습 (오른쪽이 앞 +x)", "side view (right = front, +x)") + f"\npitch = atan2(f_x, f_z) = {np.degrees(pitch):+.1f}°")
+    _force_view(ax2, f[1], np.hypot(f[0], f[2]), r"$\sqrt{f_x^2 + f_z^2}$", _t("가속하는 몫 a_y", "accelerating part a_y"), True,
+                _t("뒤에서 본 모습 (왼쪽이 +y)", "seen from behind (left = +y)") + f"\nroll = atan2($-f_y$, $\\sqrt{{f_x^2+f_z^2}}$) = {np.degrees(roll):+.1f}°")
     plt.tight_layout(); plt.show()
     T = MASS * np.linalg.norm(f)
-    print(f"a = {_fmt(a)} → 추력 T = m·|f/m| = {T:.3f} N (호버의 {T / (MASS * G):.2f}배) · "
-          f"roll {np.degrees(roll):+.1f}° · pitch {np.degrees(pitch):+.1f}°")
+    print(_t(f"a = {_fmt(a)} → 추력 T = m·|f/m| = {T:.3f} N (호버의 {T / (MASS * G):.2f}배) · ",
+             f"a = {_fmt(a)} → thrust T = m·|f/m| = {T:.3f} N ({T / (MASS * G):.2f}× hover) · ")
+          + f"roll {np.degrees(roll):+.1f}° · pitch {np.degrees(pitch):+.1f}°")
     if f[1] > 0.05:
-        print("왼쪽(+y)으로 가려면 기체 왼쪽을 내린다. x축 둘레 오른손 법칙으로는 이게 roll −라서 식에 −f_y가 들어간다.")
+        print(_t("왼쪽(+y)으로 가려면 기체 왼쪽을 내린다. x축 둘레 오른손 법칙으로는 이게 roll −라서 식에 −f_y가 들어간다.",
+                 "To go left (+y) the drone lowers its left side. By the right-hand rule about x that is a negative roll, hence −f_y in the formula."))
 
 
 def check_attitude(acc_to_thrust_attitude):
     """② 가속도 → 추력·자세를 네 입력으로 시험한다."""
     mg = MASS * G
-    cases = [("제자리 (a = 0)", (0, 0, 0), 0.0, mg, (0, 0)),
-             ("+x로 g만큼", (G, 0, 0), 0.0, np.sqrt(2) * mg, (0, 45)),
-             ("+y로 g만큼", (0, G, 0), 0.0, np.sqrt(2) * mg, (-45, 0)),
-             ("yaw 90°에서 +y로 g만큼", (0, G, 0), np.pi / 2, np.sqrt(2) * mg, (0, 45))]
+    cases = [(_t("제자리 (a = 0)", "hover (a = 0)"), (0, 0, 0), 0.0, mg, (0, 0)),
+             (_t("+x로 g만큼", "g toward +x"), (G, 0, 0), 0.0, np.sqrt(2) * mg, (0, 45)),
+             (_t("+y로 g만큼", "g toward +y"), (0, G, 0), 0.0, np.sqrt(2) * mg, (-45, 0)),
+             (_t("yaw 90°에서 +y로 g만큼", "yaw 90°, g toward +y"), (0, G, 0), np.pi / 2, np.sqrt(2) * mg, (0, 45))]
     rows = []
     for name, a, yaw, T_want, (r_want, p_want) in cases:
         T, att = filled(*acc_to_thrust_attitude(np.array(a, float), yaw, MASS))
@@ -231,9 +236,10 @@ def check_attitude(acc_to_thrust_attitude):
         ok = abs(T - T_want) < 1e-4 and abs(r - r_want) < 0.1 and abs(p - p_want) < 0.1
         rows.append((name, f"T {T:.3f} N · roll {r:+.1f}° · pitch {p:+.1f}°",
                      f"T {T_want:.3f} N · roll {r_want:+.0f}° · pitch {p_want:+.0f}°", ok))
-    table(rows, header=("입력", "내 결과", "답", ""))
+    table(rows, header=_t(("입력", "내 결과", "답", ""), ("input", "my result", "answer", "")))
     T, att = acc_to_thrust_attitude(np.array([20.0, 0, 0]), 0.0, MASS)
-    print(f"a = (20, 0, 0)을 그대로 주면 pitch {np.degrees(att[1]):.1f}°. 이렇게 눕으면 높이를 못 지킨다 → ③")
+    print(_t(f"a = (20, 0, 0)을 그대로 주면 pitch {np.degrees(att[1]):.1f}°. 이렇게 눕으면 높이를 못 지킨다 → ③",
+             f"Passing a = (20, 0, 0) as is gives pitch {np.degrees(att[1]):.1f}°. Lying that flat cannot hold the height → ③"))
 
 
 def check_tilt(limit_tilt, acc_to_thrust_attitude):
@@ -241,10 +247,11 @@ def check_tilt(limit_tilt, acc_to_thrust_attitude):
     big = np.asarray(filled(limit_tilt(np.array([20.0, 0.0, 0.0]), MAX_TILT)), float)
     _, att = acc_to_thrust_attitude(big, 0.0, MASS)
     small = np.asarray(filled(limit_tilt(np.array([1.0, 0.5, 0.2]), MAX_TILT)), float)
-    rows = [("a = (20, 0, 0) → 제한 후", f"{_fmt(big)} · pitch {np.degrees(att[1]):.1f}°", "pitch 30°, a_z = 0 그대로",
+    rows = [(_t("a = (20, 0, 0) → 제한 후", "a = (20, 0, 0) → limited"), f"{_fmt(big)} · pitch {np.degrees(att[1]):.1f}°",
+             _t("pitch 30°, a_z = 0 그대로", "pitch 30°, a_z = 0 unchanged"),
              abs(np.degrees(att[1]) - 30) < 0.1 and abs(big[2]) < 1e-9),
-            ("a = (1, 0.5, 0.2)는 작으니 그대로", _fmt(small), _fmt((1, 0.5, 0.2)), bool(np.allclose(small, [1, 0.5, 0.2])))]
-    table(rows, header=("입력", "내 결과", "답", ""))
+            (_t("a = (1, 0.5, 0.2)는 작으니 그대로", "a = (1, 0.5, 0.2) is small, unchanged"), _fmt(small), _fmt((1, 0.5, 0.2)), bool(np.allclose(small, [1, 0.5, 0.2])))]
+    table(rows, header=_t(("입력", "내 결과", "답", ""), ("input", "my result", "answer", "")))
 
 
 # 5. 첫 비행: 바람 속 호버 ---------------------------------------------------------------
@@ -269,9 +276,9 @@ def hover_in_wind(chip, **cases):
     """바람(무게의 약 3%)과 돌풍 속에서 (0, 0, 1)에 떠 있기. 5초부터 위치 오차를 잰다.
 
         hover_in_wind(chip)                                   # 기본 게인
-        hover_in_wind(chip, 기본={}, PD만={"ki": 0})           # 여러 게인 비교
+        hover_in_wind(chip, 기본={}, PD만={"ki": 0})           # 여러 게인 비교 (영어판: default={}, PD_only={"ki": 0})
     """
-    cases = cases or {"기본 (kp 6, kd 4, ki 2)": {}}
+    cases = cases or {_t("기본 (kp 6, kd 4, ki 2)", "default (kp 6, kd 4, ki 2)"): {}}
     fig, (ax, az) = plt.subplots(1, 2, figsize=(10, 4.2), gridspec_kw={"width_ratios": [1, 1.5]})
     rows = []
     for k, (name, g) in enumerate(cases.items()):
@@ -282,15 +289,16 @@ def hover_in_wind(chip, **cases):
         az.plot(a["t"], 100 * np.linalg.norm(a["p"][:, 0, :2], axis=1), color=c, lw=1.5, label=name)
         rows.append((name, f"{100 * rms:.2f} cm", f"< {100 * GOAL['hover']:.0f} cm", rms < GOAL["hover"]))
     ax.add_patch(plt.Circle((0, 0), 100 * GOAL["hover"], color="#2f9e44", alpha=0.12))
-    ax.annotate("바람은 +x, +y 쪽으로 분다", (-7.5, 7.0), fontsize=8, color="#555")
+    ax.annotate(_t("바람은 +x, +y 쪽으로 분다", "wind blows toward +x, +y"), (-7.5, 7.0), fontsize=8, color="#555")
     ax.set_xlim(-8, 8); ax.set_ylim(-8, 8); ax.set_aspect("equal")
-    ax.set_xlabel("x 오차 [cm]"); ax.set_ylabel("y 오차 [cm]"); ax.set_title("위에서 본 위치 오차 (초록: 5 cm)")
+    ax.set_xlabel(_t("x 오차 [cm]", "x error [cm]")); ax.set_ylabel(_t("y 오차 [cm]", "y error [cm]"))
+    ax.set_title(_t("위에서 본 위치 오차 (초록: 5 cm)", "Position error from above (green: 5 cm)"))
     ax.legend(fontsize=8, loc="lower left")
     az.axvline(5.0, color="k", lw=0.8, ls=":"); az.axhline(100 * GOAL["hover"], color="#2f9e44", lw=1, ls="--")
-    az.set_ylim(0, 15); az.set_xlabel("t [s]"); az.set_ylabel("목표에서 수평으로 떨어진 거리 [cm]")
-    az.set_title("시간에 따라 (점선 뒤부터 잰다)")
+    az.set_ylim(0, 15); az.set_xlabel("t [s]"); az.set_ylabel(_t("목표에서 수평으로 떨어진 거리 [cm]", "horizontal distance from target [cm]"))
+    az.set_title(_t("시간에 따라 (점선 뒤부터 잰다)", "Over time (measured after the dotted line)"))
     plt.tight_layout(); plt.show()
-    table(rows, header=("게인", "위치 오차 RMS", "기준", ""))
+    table(rows, header=_t(("게인", "위치 오차 RMS", "기준", ""), ("gains", "position error RMS", "limit", "")))
 
 
 # 6. 웨이포인트: 링 코스 ------------------------------------------------------------------
@@ -330,19 +338,19 @@ def ring_course(chip, WaypointFollower, gains=None, video=True):
     fig, (ax, az) = plt.subplots(1, 2, figsize=(10, 4.2), gridspec_kw={"width_ratios": [1, 1.4]})
     _ring_axes(ax)
     ax.plot(a["p"][:, 0, 0], a["p"][:, 0, 1], color=COLORS[0], lw=1.6)
-    ax.set_title("위에서 본 경로 (주황: 도착 반경 15 cm)")
+    ax.set_title(_t("위에서 본 경로 (주황: 도착 반경 15 cm)", "Path from above (orange: arrival radius 15 cm)"))
     az.plot(a["t"], tilt, color=COLORS[1], lw=1.4)
-    az.axhline(30, color="k", ls=":", lw=1, label="명령 한계 30°")
-    az.axhline(GOAL["ring_tilt"], color="#d62728", ls="--", lw=1, label="기준 35°")
-    az.set_xlabel("t [s]"); az.set_ylabel("기울기 [°]"); az.set_title("기울기"); az.legend(fontsize=8)
+    az.axhline(30, color="k", ls=":", lw=1, label=_t("명령 한계 30°", "command limit 30°"))
+    az.axhline(GOAL["ring_tilt"], color="#d62728", ls="--", lw=1, label=_t("기준 35°", "limit 35°"))
+    az.set_xlabel("t [s]"); az.set_ylabel(_t("기울기 [°]", "tilt [°]")); az.set_title(_t("기울기", "Tilt")); az.legend(fontsize=8)
     plt.tight_layout(); plt.show()
     ok_done = t_done is not None and t_done < GOAL["ring_time"]
-    table([("웨이포인트", f"{min(fol.i, 5)}/5" + (f" · {t_done:.1f} s에 완주" if t_done else ""),
-            f"5/5, {GOAL['ring_time']:.0f} s 안", ok_done),
-           ("최대 기울기", f"{tilt.max():.1f}°", f"≤ {GOAL['ring_tilt']:.0f}°", tilt.max() <= GOAL["ring_tilt"])])
+    table([(_t("웨이포인트", "waypoints"), f"{min(fol.i, 5)}/5" + (_t(f" · {t_done:.1f} s에 완주", f" · done at {t_done:.1f} s") if t_done else ""),
+            _t(f"5/5, {GOAL['ring_time']:.0f} s 안", f"5/5 within {GOAL['ring_time']:.0f} s"), ok_done),
+           (_t("최대 기울기", "max tilt"), f"{tilt.max():.1f}°", f"≤ {GOAL['ring_tilt']:.0f}°", tilt.max() <= GOAL["ring_tilt"])])
     if video:
         from IPython.display import display
-        display(animate(a["t"], a["p"], "링 코스", targets=RING, lim=1.7, speed=1.5))
+        display(animate(a["t"], a["p"], _t("링 코스", "Ring course"), targets=RING, lim=1.7, speed=1.5))
 
 
 # 7. 원 궤적과 앞먹임 ----------------------------------------------------------------------
@@ -384,28 +392,29 @@ def _circle(chip, gains=None, ff=True, seed=0):
 
     w.run(t_start + 2 * CIRCLE_T + 1.0, ground_station=gs)
     a = w.arrays(); w.close()
-    tr = traj[0]
-    m = (a["t"] >= tr.t0 + 1.0) & (a["t"] <= tr.t0 + tr.T)
-    ref = np.array([tr(t)["p"] for t in a["t"][m]])
+    trj = traj[0]
+    m = (a["t"] >= trj.t0 + 1.0) & (a["t"] <= trj.t0 + trj.T)
+    ref = np.array([trj(t)["p"] for t in a["t"][m]])
     err = a["p"][m, 0] - ref
     return a, m, float(np.sqrt(np.mean(np.sum(err ** 2, 1))))
 
 
 def circle(chip, gains=None, compare_ff=True):
     """반지름 1 m 원을 한 바퀴 8초로 두 바퀴 (바람 있음). compare_ff=True면 앞먹임을 끈 비행과 비교한다."""
-    runs = [("앞먹임 켬 (궤적의 a를 더함)", True)] + ([("앞먹임 끔 (a = 0)", False)] if compare_ff else [])
+    runs = [(_t("앞먹임 켬 (궤적의 a를 더함)", "feed-forward on (adds the trajectory's a)"), True)] + \
+        ([(_t("앞먹임 끔 (a = 0)", "feed-forward off (a = 0)"), False)] if compare_ff else [])
     fig, ax = plt.subplots(figsize=(5, 5))
     th = np.linspace(0, 2 * np.pi, 200)
-    ax.plot(CIRCLE_R * np.cos(th), CIRCLE_R * np.sin(th), "k--", lw=1, label="목표 원")
+    ax.plot(CIRCLE_R * np.cos(th), CIRCLE_R * np.sin(th), "k--", lw=1, label=_t("목표 원", "target circle"))
     rows = []
     for k, (name, ff) in enumerate(runs):
         a, m, rms = _circle(chip, gains, ff)
         ax.plot(a["p"][m, 0, 0], a["p"][m, 0, 1], color=COLORS[k], lw=1.5, label=name)
         rows.append((name, f"{100 * rms:.2f} cm", f"< {100 * GOAL['circle']:.0f} cm", rms < GOAL["circle"]))
     ax.set_aspect("equal"); ax.set_xlim(-1.4, 1.4); ax.set_ylim(-1.4, 1.4)
-    ax.set_xlabel("x [m]"); ax.set_ylabel("y [m]"); ax.set_title("원 궤적 (위에서 본 모습)"); ax.legend(fontsize=8, loc="lower left")
+    ax.set_xlabel("x [m]"); ax.set_ylabel("y [m]"); ax.set_title(_t("원 궤적 (위에서 본 모습)", "Circle trajectory (from above)")); ax.legend(fontsize=8, loc="lower left")
     plt.show()
-    table(rows, header=("", "원에서 벗어난 거리 RMS", "기준", ""))
+    table(rows, header=_t(("", "원에서 벗어난 거리 RMS", "기준", ""), ("", "distance off the circle RMS", "limit", "")))
 
 
 # 8. 미션 ----------------------------------------------------------------------------
@@ -416,13 +425,14 @@ def flight_tests(chip, WaypointFollower, gains=None):
     a, t_done, fol = _ring(chip, WaypointFollower, gains)
     tilt = _tilt_deg(a).max()
     _, _, c = _circle(chip, gains)
-    rows = [("바람 속 호버 위치 오차 RMS", f"{100 * h:.2f} cm", "< 5 cm", h < GOAL["hover"]),
-            ("링 코스 완주", f"{min(fol.i, 5)}/5" + (f" · {t_done:.1f} s" if t_done else ""), "5/5, 40 s 안",
-             t_done is not None and t_done < GOAL["ring_time"]),
-            ("링 코스 최대 기울기", f"{tilt:.1f}°", "≤ 35°", tilt <= GOAL["ring_tilt"]),
-            ("원 궤적 RMS", f"{100 * c:.2f} cm", "< 10 cm", c < GOAL["circle"])]
+    rows = [(_t("바람 속 호버 위치 오차 RMS", "hover in wind: position error RMS"), f"{100 * h:.2f} cm", "< 5 cm", h < GOAL["hover"]),
+            (_t("링 코스 완주", "ring course finished"), f"{min(fol.i, 5)}/5" + (f" · {t_done:.1f} s" if t_done else ""),
+             _t("5/5, 40 s 안", "5/5 within 40 s"), t_done is not None and t_done < GOAL["ring_time"]),
+            (_t("링 코스 최대 기울기", "ring course max tilt"), f"{tilt:.1f}°", "≤ 35°", tilt <= GOAL["ring_tilt"]),
+            (_t("원 궤적 RMS", "circle trajectory RMS"), f"{100 * c:.2f} cm", "< 10 cm", c < GOAL["circle"])]
     table(rows)
-    print("미션 성공! 네 칸 모두 통과했어요." if all(r[3] for r in rows) else "아직 빨간 칸이 있어요. 위로 올라가 해당 단계를 다시 보세요.")
+    print(_t("미션 성공! 네 칸 모두 통과했어요.", "Mission complete! All four boxes passed.") if all(r[3] for r in rows)
+          else _t("아직 빨간 칸이 있어요. 위로 올라가 해당 단계를 다시 보세요.", "Some boxes are still red. Scroll up and revisit that stage."))
 
 
 def tune(chip, WaypointFollower, test="hover"):
@@ -433,7 +443,8 @@ def tune(chip, WaypointFollower, test="hover"):
     sl = dict(kp=W.FloatSlider(value=6, min=0.5, max=15, step=0.5, description="kp"),
               kd=W.FloatSlider(value=4, min=0, max=10, step=0.5, description="kd"),
               ki=W.FloatSlider(value=2, min=0, max=6, step=0.5, description="ki"))
-    pick = W.ToggleButtons(options=[("바람 속 호버", "hover"), ("링 코스", "ring"), ("원", "circle")], value=test)
+    pick = W.ToggleButtons(options=[(_t("바람 속 호버", "hover in wind"), "hover"), (_t("링 코스", "ring course"), "ring"),
+                                     (_t("원", "circle"), "circle")], value=test)
     for s in sl.values():
         s.continuous_update = False
     out = W.Output()
@@ -506,13 +517,16 @@ def live(chip, gains=None, window=False, duration=180.0):
                  "kp": (g0["kp"], 0, 20, 0.5), "kd": (g0["kd"], 0, 12, 0.5), "ki": (g0["ki"], 0, 8, 0.5),
                  "wind": (WIND[0], 0.0, 0.04, 0.002)},
         checkboxes={"circle": False},
-        labels={"x": "목표 x [m]", "y": "목표 y [m]", "z": "목표 z [m]", "wind": "바람 [N]", "circle": "원 그리기",
-                "p_x": "x", "p_y": "y", "p_z": "z", "sp_x": "목표 x", "sp_y": "목표 y", "sp_z": "목표 z",
-                "tilt": "기울기", "err_cm": "목표와 떨어진 거리"},
-        panels=[("가로 위치 (점선이 목표)", ["p_x", "sp_x", "p_y", "sp_y"], "m"),
-                ("높이", ["p_z", "sp_z"], "m"),
-                ("기울기: 옆으로 가거나 바람을 버틸 때 기운다 (칩 제한 30°)", ["tilt"], "°"),
-                ("목표와 떨어진 거리", ["err_cm"], "cm")],
+        labels=_t({"x": "목표 x [m]", "y": "목표 y [m]", "z": "목표 z [m]", "wind": "바람 [N]", "circle": "원 그리기",
+                   "p_x": "x", "p_y": "y", "p_z": "z", "sp_x": "목표 x", "sp_y": "목표 y", "sp_z": "목표 z",
+                   "tilt": "기울기", "err_cm": "목표와 떨어진 거리"},
+                  {"x": "target x [m]", "y": "target y [m]", "z": "target z [m]", "wind": "wind [N]", "circle": "fly a circle",
+                   "p_x": "x", "p_y": "y", "p_z": "z", "sp_x": "target x", "sp_y": "target y", "sp_z": "target z",
+                   "tilt": "tilt", "err_cm": "distance from target"}),
+        panels=[(_t("가로 위치 (점선이 목표)", "horizontal position (dashed = target)"), ["p_x", "sp_x", "p_y", "sp_y"], "m"),
+                (_t("높이", "height"), ["p_z", "sp_z"], "m"),
+                (_t("기울기: 옆으로 가거나 바람을 버틸 때 기운다 (칩 제한 30°)", "tilt: leans to move sideways or to hold against wind (chip limit 30°)"), ["tilt"], "°"),
+                (_t("목표와 떨어진 거리", "distance from target"), ["err_cm"], "cm")],
     ).start()
 
 
@@ -563,9 +577,9 @@ def _altitude_flight(source, kf=None, seed=0, T=10.0, z0=0.5, z1=1.0, t_step=5.0
 
 def kf_test(AltitudeKF):
     """고도를 무엇으로 재느냐에 따라 비행이 어떻게 달라지는지: 참값, 카메라 그대로, 칼만 필터."""
-    runs = [("참값 (시뮬레이터만 아는 값)", "truth", None),
-            ("천장 카메라 그대로", "mocap", None),
-            ("칼만 필터 (IMU + 카메라)", "kf", "kf")]
+    runs = [(_t("참값 (시뮬레이터만 아는 값)", "truth (only the simulator knows it)"), "truth", None),
+            (_t("천장 카메라 그대로", "ceiling camera as is"), "mocap", None),
+            (_t("칼만 필터 (IMU + 카메라)", "Kalman filter (IMU + camera)"), "kf", "kf")]
     fig, (ax, af) = plt.subplots(1, 2, figsize=(11, 3.8))
     rows = []
     for k, (name, src, use_kf) in enumerate(runs):
@@ -578,10 +592,10 @@ def kf_test(AltitudeKF):
         af.plot(a["t"], a["thrust"], color=COLORS[k], lw=0.8, alpha=0.8 if src == "mocap" else 1.0,
                 zorder=1 if src == "mocap" else 3, label=name)
         rows.append((name, f"{100 * rms:.2f} cm", f"{jitter:.3f} N", None))
-    ax.set_xlabel("t [s]"); ax.set_ylabel("실제 고도 [m]"); ax.legend(fontsize=8); ax.set_title("고도")
-    af.set_xlabel("t [s]"); af.set_ylabel("추력 [N]"); af.set_title("모터에 준 추력 (떨림을 보자)"); af.set_ylim(0.2, 0.55)
+    ax.set_xlabel("t [s]"); ax.set_ylabel(_t("실제 고도 [m]", "true altitude [m]")); ax.legend(fontsize=8); ax.set_title(_t("고도", "Altitude"))
+    af.set_xlabel("t [s]"); af.set_ylabel(_t("추력 [N]", "thrust [N]")); af.set_title(_t("모터에 준 추력 (떨림을 보자)", "Thrust sent to the motors (watch the jitter)")); af.set_ylim(0.2, 0.55)
     plt.tight_layout(); plt.show()
-    table(rows, header=("고도를 잰 방법", "호버 고도 오차 RMS", "추력 떨림 σ", ""))
+    table(rows, header=_t(("고도를 잰 방법", "호버 고도 오차 RMS", "추력 떨림 σ", ""), ("altitude source", "hover altitude error RMS", "thrust jitter σ", "")))
 
 
 def check_kf(AltitudeKF):
@@ -593,5 +607,7 @@ def check_kf(AltitudeKF):
     kf2.P = np.diag([1e-4, 1e-2]); kf2.r = 1e-4
     kf2.update(0.02)
     u_ok = abs(kf2.z - 0.01) < 1e-9
-    table([("⑤ 예측: z=0, v=0에서 a=1 m/s²로 0.1초", f"z {kf.x[0]:.4f} m · v {kf.x[1]:.3f} m/s", "z 0.0050 · v 0.100", p_ok),
-           ("⑥⑦ 보정: 내 믿음과 카메라 믿음이 같을 때 (P = r)", f"z {kf2.z:.4f} m", "가운데 0.0100 m", u_ok)])
+    table([(_t("⑤ 예측: z=0, v=0에서 a=1 m/s²로 0.1초", "⑤ predict: from z=0, v=0 with a=1 m/s² for 0.1 s"),
+            f"z {kf.x[0]:.4f} m · v {kf.x[1]:.3f} m/s", "z 0.0050 · v 0.100", p_ok),
+           (_t("⑥⑦ 보정: 내 믿음과 카메라 믿음이 같을 때 (P = r)", "⑥⑦ correct: when my belief and the camera's are equal (P = r)"),
+            f"z {kf2.z:.4f} m", _t("가운데 0.0100 m", "halfway 0.0100 m"), u_ok)])

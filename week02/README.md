@@ -1,5 +1,7 @@
 # 2회차 · 기울여서 원하는 곳으로
 
+[English](README.en.md)
+
 드론은 기울여야 옆으로 간다. 1회차 PID를 x, y, z 세 축에 쓰고, 원하는 가속도를 추력과 기울기로 바꾸는
 드론 칩의 제어기를 직접 만든다. 수업이 끝나면 내 칩이 바람 속에서 5 cm 안에 머물고, 웨이포인트 다섯 개를 돌고, 원을 따라간다.
 
@@ -14,6 +16,7 @@ code .
 VS Code에서 `week02/lesson.ipynb`를 연다. 오른쪽 위 커널이 `ICARUS DSP (py3.12)`인지 확인한다.
 커널을 고르라고 하면 `Jupyter Kernel…` 목록에서 `ICARUS DSP (py3.12)`를 고른다.
 첫 셀을 `Shift+Enter`로 실행해서 "시뮬레이터 준비 완료"가 나오면 된다.
+영어 노트북은 `week02/lesson_en.ipynb`이다 (내용과 빈칸은 같고 설명만 영어).
 
 ## 수업 방식
 
@@ -43,5 +46,7 @@ VS Code에서 `week02/lesson.ipynb`를 연다. 오른쪽 위 커널이 `ICARUS D
 ```
 week02/
 ├─ lesson.ipynb    수업 노트북 (빈칸 있음). 이 파일만 연다
-└─ background.py   배경 코드: 칩 조립, 자세 제어기, 바람, 코스, 그래프. 열어 보지 않아도 된다
+├─ lesson_en.ipynb 같은 노트북의 영어판
+├─ background.py   배경 코드: 칩 조립, 자세 제어기, 바람, 코스, 그래프. 열어 보지 않아도 된다
+└─ README.md       이 파일 (영어판은 README.en.md)
 ```
