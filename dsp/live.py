@@ -177,10 +177,10 @@ def top_view(P, targets=None, ax=None, title="", names=None, lim=2.2, start=True
         ax.annotate(names[i], P[-1, i, :2], xytext=(5, 5), textcoords="offset points", fontsize=8)
     if targets is not None:
         T = np.asarray(targets)
-        ax.plot(T[:, 0], T[:, 1], "x", color="k", ms=8, mew=1.5, label="목표")
+        ax.plot(T[:, 0], T[:, 1], "x", color="k", ms=8, mew=1.5, label=tr("목표", "target"))
         ax.legend(loc="upper right", fontsize=8)
     ax.set_xlim(-lim, lim); ax.set_ylim(-lim, lim); ax.set_aspect("equal")
-    ax.set_xlabel("x [m] (동쪽)"); ax.set_ylabel("y [m] (북쪽)")
+    ax.set_xlabel(tr("x [m] (동쪽)", "x [m] (east)")); ax.set_ylabel(tr("y [m] (북쪽)", "y [m] (north)"))
     if title:
         ax.set_title(title)
     return ax
@@ -203,7 +203,7 @@ def animate(t, P, title="", targets=None, safe=SAFE_DIST, fps=12, speed=1.0, tra
     frames = list(range(0, len(t), step))
     if frames[-1] != len(t) - 1:
         frames.append(len(t) - 1)
-    tr = max(1, int(trail / dt))
+    n_trail = max(1, int(trail / dt))
     T = None if targets is None else np.asarray(targets)
 
     fig, (ax, az) = plt.subplots(1, 2, figsize=(9.2, 4.2), gridspec_kw={"width_ratios": [1.1, 1]})
@@ -222,20 +222,20 @@ def animate(t, P, title="", targets=None, safe=SAFE_DIST, fps=12, speed=1.0, tra
         y = min_pair_distance(P)
         az.plot(t, y, color="#bbb", lw=1)
         live = [az.plot([], [], "k", lw=1.6)[0]]
-        az.axhline(safe, color="#d62728", ls="--", lw=1, label=f"안전 거리 {safe:.2f} m")
-        az.set_ylabel("가장 가까운 두 대 거리 [m]"); az.set_ylim(0, max(1.5, float(np.nanmax(y[np.isfinite(y)])) * 1.1))
+        az.axhline(safe, color="#d62728", ls="--", lw=1, label=tr(f"안전 거리 {safe:.2f} m", f"safe distance {safe:.2f} m"))
+        az.set_ylabel(tr("가장 가까운 두 대 거리 [m]", "closest pair distance [m]")); az.set_ylim(0, max(1.5, float(np.nanmax(y[np.isfinite(y)])) * 1.1))
         az.legend(loc="upper right", fontsize=8)
     else:
         for i in range(n):
             az.plot(t, P[:, i, 2], color=COLORS[i % 6], lw=0.8, alpha=0.25)
         live = [az.plot([], [], color=COLORS[i % 6], lw=1.4)[0] for i in range(n)]
-        az.set_ylabel("고도 z [m]"); az.set_ylim(-0.05, max(1.6, float(P[:, :, 2].max()) + 0.2))
+        az.set_ylabel(tr("고도 z [m]", "altitude z [m]")); az.set_ylim(-0.05, max(1.6, float(P[:, :, 2].max()) + 0.2))
     cursor = az.axvline(t[0], color="k", lw=0.8, alpha=0.5)
     az.set_xlim(t[0], t[-1]); az.set_xlabel("t [s]")
     fig.tight_layout()
 
     def draw(k):
-        lo = max(0, k - tr)
+        lo = max(0, k - n_trail)
         for i in range(n):
             trails[i].set_data(P[lo:k + 1, i, 0], P[lo:k + 1, i, 1])
             dots[i].set_data([P[k, i, 0]], [P[k, i, 1]])
